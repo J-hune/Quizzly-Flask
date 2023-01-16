@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 app.register_blueprint(api)
 
-con = sqlite3.connect('database.sql')
+con = sqlite3.connect('database.db')
 cur = con.cursor()
 
 if __name__ == '__main__':
