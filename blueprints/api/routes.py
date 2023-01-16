@@ -1,4 +1,5 @@
 from flask import Blueprint
+import app
 
 from blueprints.api.labels.routes import label
 from blueprints.api.login.routes import login

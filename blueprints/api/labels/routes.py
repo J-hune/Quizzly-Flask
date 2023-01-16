@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+import app
 
 label = Blueprint('labels', __name__, url_prefix='/labels')
 

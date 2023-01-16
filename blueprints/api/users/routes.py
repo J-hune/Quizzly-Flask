@@ -1,4 +1,5 @@
 from flask import Blueprint
+import app
 
 users = Blueprint('users', __name__, url_prefix='/users')
 
