@@ -11,7 +11,3 @@ api.register_blueprint(label)
 api.register_blueprint(login)
 api.register_blueprint(questions)
 api.register_blueprint(users)
-
-@api.route('/getdata')
-def getdata():
-    return {'key': 'value'}

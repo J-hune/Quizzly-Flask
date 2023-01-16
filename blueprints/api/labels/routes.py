@@ -7,7 +7,7 @@ label = Blueprint('labels', __name__, url_prefix='/labels')
 def getLabelsData():
     return {'key': 'value'}
 
-@label.route('/addLabel/<id>', methods=['POST'])
+@label.route('/addLabel/<name>', methods=['POST'])
 def addLabel(label):
     print(label)
     data = request.json
