@@ -35,7 +35,7 @@ def getUser(id):
 def addUser():
     # Je suis parti du principe que data est de cette forme
     # {"nom" : "Bernard","prenom" : "Rapoe", "password" : "AZERTYUIOP"}
-    data = request.json
+    data = request.get_json(force=True)
 
     # Vérifie si on a nos données
     try:

@@ -17,7 +17,7 @@ def addQuestion():
 
     # Je suis parti du principe que data est de cette forme
     # {"enonce" : "Est-ce que l'algo est amusant ?", "user" : 1}
-    data = request.json
+    data = request.get_json(force=True)
 
     if not (data["enonce"] and data["user"]):
         return jsonify({
@@ -33,7 +33,7 @@ def addQuestion():
 @questions.route('/addReponses', methods=['POST'])
 def addReponses():
     # Je suis parti du principe que data est de cette forme {"question" : 2, "reponse" : "Non"}
-    data = request.json
+    data = request.get_json(force=True)
 
     # Vérifie si on a nos données
     try:

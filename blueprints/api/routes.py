@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, session
 import app
 
 from blueprints.api.labels.routes import label
@@ -11,3 +11,9 @@ api.register_blueprint(label)
 api.register_blueprint(login)
 api.register_blueprint(questions)
 api.register_blueprint(users)
+
+
+@api.route('/')
+def index():
+    print(session["user"])
+    return {}

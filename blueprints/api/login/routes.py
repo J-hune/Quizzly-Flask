@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 from functions.login import registerUser, userExists
 
 login = Blueprint('login', __name__, url_prefix='/login')
@@ -6,7 +6,7 @@ login = Blueprint('login', __name__, url_prefix='/login')
 
 @login.route('/signup', methods=['POST'])
 def signup():
-    data = request.json
+    data = request.get_json(force=True)
     firstname = data.get("firstname")
     surname = data.get("surname")
     password = data.get("password")
@@ -24,7 +24,7 @@ def signup():
 
 @login.route('/signin', methods=['POST'])
 def signin():
-    data = request.json
+    data = request.get_json(force=True)
     firstname = data.get("firstname")
     surname = data.get("surname")
     password = data.get("password")
