@@ -20,8 +20,9 @@ def supprimerLabel(name):
 @label.route('/getLabel/<name>', methods=['GET'])
 def getLabelData(name):
     # Si l'obtention de l'étiquette a réussi
-    if fonctionLabels.searchLabel(name):
-        return jsonify(success=True), 200
+    res = fonctionLabels.searchLabel(name)
+    if res:
+        return res
     else:
         return jsonify({
             "status": 401,
@@ -39,3 +40,24 @@ def addLabel(name, hexa):
             "status": 401,
             "reason": "Impossible d'ajouter l'étiquette"
         }), 401
+
+
+# Routes pour ajouter de nouvelles étiquettes
+@label.route('/addLiensEtiquettesQuestions/<etiquette>/<question>', methods=['GET'])
+def addLiensEtiquettesQuestions(etiquette, question):
+
+    # Si l'ajout de l'étiquette se passe bien
+    if fonctionLabels.addLiensEtiquettesQuestions(etiquette, question):
+        return jsonify(success=True), 200
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Impossible d'ajouter le lien entre l'etiquette et la question"
+        }), 400
+
+
+# Routes pour get les étiquettes en fonction des questions
+@label.route('/getLiensEtiquettes/<questionId>', methods=['GET'])
+def getLiensEtiquettes(questionId):
+    return fonctionLabels.getLiensEtiquettes(questionId)
+
