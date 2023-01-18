@@ -15,5 +15,5 @@ api.register_blueprint(users)
 
 @api.route('/')
 def index():
-    print(session["user"])
+    print(session.get("user"))
     return {}

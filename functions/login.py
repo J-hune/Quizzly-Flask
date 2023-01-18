@@ -27,6 +27,7 @@ def registerUser(firstname, surname, password):
         'surname': surname,
         'type': 0
     }
+    session.permanent = True
 
     connection.close()
 
@@ -57,6 +58,7 @@ def userExists(firstname, surname, password):
                 'surname': i[2],
                 'type': i[2]
             }
+            session.permanent = True
             return True
     connection.commit()
 
