@@ -6,13 +6,12 @@ questions = Blueprint('questions', __name__, url_prefix='/questions')
 
 
 # Route qui renvoie les questions selon l'id d'un utilisateur
-@questions.route('/getQuestions', methods=['GET'])
-def getQuestions():
-
+@questions.route('/getQuestions/<label>', methods=['GET'])
+def getQuestions(label):
     # Vérification que l'utilisateur est en session
     if 'user' in session:
         user = session.get("user")
-        questions = functionQuestions.getQuestions(user['id'])
+        questions = functionQuestions.getQuestions(user['id'], label)
         return jsonify(questions)
     else:
         return jsonify({

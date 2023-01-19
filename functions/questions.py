@@ -12,7 +12,7 @@ import functions.fonctionLabels as fonctionLabels
 #     "reponses": [{"id": 1, "question": 1, "reponse": "Dounnouvahannne", "reponseJuste": 1},...],
 #     "user": 1 }
 # ]
-def getQuestions(userId):
+def getQuestions(userId, label):
 
     # Connection à la table
     con = sqlite3.connect('database.db')
@@ -20,10 +20,12 @@ def getQuestions(userId):
 
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
     # et seulement celle qui ont une etiquette
-    res = cur.execute("SELECT id, enonce, user FROM questions WHERE user = ?;", (userId,))
-    res = res.fetchall()
+    sql = """SELECT questions.enonce, questions.id, questions.user FROM questions 
+             JOIN liensEtiquettesQuestions ON liensEtiquettesQuestions.questions = questions.id
+             WHERE questions.user = ? AND liensEtiquettesQuestions.etiquettes = ?"""
 
-    # Fermeture de la connection
+    res = cur.execute(sql, (userId, label))
+    res = res.fetchall()
 
 
     # Ranger les données sous forme de tableau de dictionnaire
@@ -43,6 +45,7 @@ def getQuestions(userId):
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
     # et seulement celle qui n'ont pas d'étiquette
 
+    # Fermeture de la connection
     cur.close()
     con.close()
 
