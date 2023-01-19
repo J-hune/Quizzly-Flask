@@ -52,6 +52,51 @@ def getQuestions(userId, label):
     return data
 
 
+# fonction qui retourne la question désignée par son id (avec ses réponses)
+# sous la forme suivante :
+#   {
+#     "enonce": "Qui a calculé la circonférence de la terre en -200 av JC ?",
+#     "id": 1,
+#     "etiquette": [{"couleur": "#000000", "nom": "histoire"},...],
+#     "reponses": [{"id": 1, "question": 1, "reponse": "Ératosthène", "reponseJuste": 1},...],
+#     "user": 1
+#   }
+def getQuestion(userId, id):
+    # Connection à la table
+    con = sqlite3.connect('database.db')
+    cur = con.cursor()
+
+    # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
+    # et seulement celle qui ont une etiquette
+    sql = """SELECT questions.enonce, questions.id, questions.user FROM questions 
+             WHERE questions.user = ? AND id = ?"""
+
+    res = cur.execute(sql, (userId, id))
+    res = res.fetchone()
+
+    if not res:
+        return False
+
+    # Dans le dictionnaire, on a les valeurs de la question et
+    # un tableau de réponses qui contient toutes les réponses associées à la question
+    dic = {
+        "id": res[1],
+        "enonce": res[0],
+        "user": res[2],
+        "etiquette": fonctionLabels.getLiensEtiquettes(res[1]),
+        "reponses": getReponses(res[1])
+    }
+
+    # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
+    # et seulement celle qui n'ont pas d'étiquette
+
+    # Fermeture de la connection
+    cur.close()
+    con.close()
+
+    return dic
+
+
 # fonction qui permet l'ajout d'une question (ses reponses, et ses etiquettes)
 # faite par un utilisateur dans la table des questions
 def addQuestions(enonce, user, liensEtiquettesQuestions, reponses):

@@ -20,6 +20,26 @@ def getQuestions(label):
         }), 400
 
 
+# Route qui renvoie la question ayant l'id donné
+@questions.route('/getQuestion/<id>', methods=['GET'])
+def getQuestion(id):
+    # Vérification que l'utilisateur est en session
+    if 'user' in session:
+        user = session.get("user")
+        question = functionQuestions.getQuestion(user['id'], id)
+        if not question:
+            return jsonify({
+                "status": 400,
+                "reason": "Question non valide"
+            }), 400
+        return jsonify(question)
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Session non disponible"
+        }), 400
+
+
 # Route qui permet l'ajout de nouvelles questions
 @questions.route('/addQuestion', methods=['POST'])
 def addQuestion():
