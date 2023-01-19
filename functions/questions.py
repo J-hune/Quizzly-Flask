@@ -1,6 +1,6 @@
 import sqlite3
 
-import functions.fonctionLabels  as fonctionLabels
+import functions.fonctionLabels as fonctionLabels
 
 
 # fonction qui permet de récupérer les questions et les réponses créées par un utilisateur
@@ -20,8 +20,7 @@ def getQuestions(userId):
 
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
     # et seulement celle qui ont une etiquette
-    res = cur.execute("""SELECT id,enonce,user FROM questions
-                        WHERE user=?;""", (userId, ))
+    res = cur.execute("SELECT id, enonce, user FROM questions WHERE user = ?;", (userId,))
     res = res.fetchall()
 
     # Fermeture de la connection
@@ -32,7 +31,13 @@ def getQuestions(userId):
     for i in range(0, len(res)):
         # Dans le dictionnaire, on a les valeurs de la question et
         # un tableau de réponses qui contient toutes les réponses associées à la question
-        dico = {"id": res[i][0], "enonce": res[i][1], "user": res[i][2], "etiquette":fonctionLabels.getLiensEtiquettes(res[i][0]),  "reponses": getReponses(res[i][0])}
+        dico = {
+            "id": res[i][0],
+            "enonce": res[i][1],
+            "user": res[i][2],
+            "etiquette": fonctionLabels.getLiensEtiquettes(res[i][0]),
+            "reponses": getReponses(res[i][0])
+        }
         data.append(dico)
 
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
@@ -53,18 +58,13 @@ def addQuestions(enonce, user, liensEtiquettesQuestions, reponses):
         cur = con.cursor()
 
         # Insertion de la nouvelle question dans la table des questions
-        sql = """INSERT INTO questions
-                (enonce, user) 
-                VALUES (?, ?);"""
+        sql = "INSERT INTO questions (enonce, user) VALUES (?, ?);"
         data = (enonce, user)
         cur.execute(sql, data)
         con.commit()
 
-        # Ensuite, on récupère l'id de la dernière question faite par l'utilisateur
-        # qui est celle que l'on vient d'ajouter
-        res = cur.execute("SELECT id FROM questions WHERE user =? ORDER BY id DESC",(user,))
-        res = res.fetchall()
-        questionsId = res[0][0]
+        # Ensuite, on récupère l'id de la dernière question insérée
+        questionsId = cur.lastrowid
 
         # Fermeture de la connection
         cur.close()
@@ -93,7 +93,7 @@ def getReponses(questionId):
     cur = con.cursor()
 
     # Requêtes pour récupérer toutes les réponses associées à la question grâce à l'id de celle-ci
-    res = cur.execute("SELECT * FROM reponses WHERE question=?", (questionId, ))
+    res = cur.execute("SELECT * FROM reponses WHERE question=?", (questionId,))
     res = res.fetchall()
 
     # On les range dans un dictionnaire pour que ce soit plus simple d'utilisation
@@ -117,9 +117,7 @@ def addReponses(question, reponse, reponseJuste):
         cur = con.cursor()
 
         # insertion des données dans la table des reponses
-        sql = """INSERT INTO reponses
-                (question, reponse,reponseJuste) 
-                VALUES (?, ?, ?);"""
+        sql = "INSERT INTO reponses (question, reponse,reponseJuste) VALUES (?, ?, ?)";
         data = (question, reponse, reponseJuste)
         cur.execute(sql, data)
         con.commit()
@@ -154,4 +152,3 @@ def deleteQuestion(id):
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la suppression !", error)
         return False
-
