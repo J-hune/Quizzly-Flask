@@ -26,20 +26,32 @@ def getQuestions():
 def addQuestion():
 
     # Je suis parti du principe que data est de cette forme
-    # {"enonce" : "Est-ce que l'algo et le php sont amusants ?", "user" : 1,
+    # {"enonce" : "Est-ce que l'algo et le php sont amusants ?",
     #     # "liensEtiquettesQuestions": ["algo", "php"],
     #     # "reponses": [ {"reponse": "Non", "reponseJuste":0 }, {"reponse": "Oui", "reponseJuste":1 } ]
     #     # }
-    data = request.get_json(force=True)
 
-    if functionQuestions.addQuestions(data["enonce"], data["user"], data["liensEtiquettesQuestions"], data["reponses"]):
-        return jsonify(success=True), 200
+    # Vérification que l'utilisateur est en session
+    if 'user' in session:
+        data = request.get_json(force=True)
+        user = session.get("user")
+        if functionQuestions.addQuestions(
+                data["enonce"],
+                user["id"],
+                data["liensEtiquettesQuestions"],
+                data["reponses"]
+        ):
+            return jsonify(success=True), 200
+        else:
+            return jsonify({
+                "status": 400,
+                "reason": "Ajout des données impossible"
+            }), 400
     else:
         return jsonify({
             "status": 400,
-            "reason": "Ajout des données impossible"
+            "reason": "Session non disponible"
         }), 400
-
 
 
 # Route qui permet l'ajout de nouvelles réponses
