@@ -12,6 +12,7 @@ app.register_blueprint(api)
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=False,
+    SESSION_COOKIE_SAMESITE="Lax"
 )
 
 con = sqlite3.connect('database.db')
