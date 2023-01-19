@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, session
 import functions.fonctionLabels as fonctionLabels
 import app
 
@@ -15,6 +15,22 @@ def supprimerLabel(name):
             "status": 401,
             "reason": "Impossible de supprimer l'étiquette"
         }), 401
+
+
+@label.route('/getLabels', methods=['GET'])
+def getLabels():
+    # Vérification que l'utilisateur est en session
+    if 'user' in session:
+        user = session.get("user")
+
+        # Récupération des étiquettes sous la forme [["nom", "couleur_en_hexa"],...]
+        labels = fonctionLabels.getLabels(user['id'])
+        return jsonify(labels)
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Session non disponible"
+        }), 400
 
 
 @label.route('/getLabel/<name>', methods=['GET'])

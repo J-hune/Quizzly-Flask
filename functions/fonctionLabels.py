@@ -1,6 +1,26 @@
 import sqlite3
 
 
+# Retourne tous les labels qu'un utilisateur utilise
+def getLabels(userId):
+    con = sqlite3.connect('database.db')
+    cur = con.cursor()
+
+    sql = ("\n"
+           "    SELECT etiquettes.nom, etiquettes.couleur FROM etiquettes\n"
+           "        JOIN liensEtiquettesQuestions ON liensEtiquettesQuestions.etiquettes = etiquettes.nom\n"
+           "        JOIN questions ON questions.id = liensEtiquettesQuestions.questions\n"
+           "        WHERE questions.user = ?\n"
+           "        GROUP BY etiquettes.nom, etiquettes.couleur")
+
+    res = cur.execute(sql, (userId,))
+    res = res.fetchall()
+    cur.close()
+    con.close()
+
+    return res
+
+
 # Supprime l'étiquette donnée en paramètre dans la base de donnée
 def supprLabel(nomLabel):
     if searchLabel(nomLabel):
@@ -9,8 +29,7 @@ def supprLabel(nomLabel):
             cur = con.cursor()
 
             sql = 'DELETE FROM etiquettes WHERE nom = ?'
-            value = nomLabel
-            cur.execute(sql, (value,))
+            cur.execute(sql, (nomLabel,))
             con.commit()
             print("L'étiquette a été supprimée!")
 
@@ -107,14 +126,13 @@ def getLiensEtiquettes(questionId):
 
     res = cur.execute("""SELECT nom, couleur FROM etiquettes e 
                     JOIN liensEtiquettesQuestions l ON e.nom = l.etiquettes 
-                    WHERE questions=?""", (questionId, ))
+                    WHERE questions=?""", (questionId,))
     res = res.fetchall()
     data = []
-    for i in range(0,len(res)):
-        dico = {"nom":res[i][0], "couleur":res[i][1]}
+    for i in range(0, len(res)):
+        dico = {"nom": res[i][0], "couleur": res[i][1]}
         data.append(dico)
 
     cur.close()
     con.close()
     return data
-
