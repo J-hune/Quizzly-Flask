@@ -79,10 +79,19 @@ def addReponses():
 
 @questions.route('/deleteQuestion/<id>', methods=['GET'])
 def deleteQuestion(id):
-    if functionQuestions.deleteQuestion(id):
-        return jsonify(success=True), 200
+
+    # Vérification que l'utilisateur est en session
+    if 'user' in session:
+        user = session.get("user")
+        if functionQuestions.deleteQuestion(id):
+            return jsonify(success=True), 200
+        else:
+            return jsonify({
+                "status": 400,
+                "reason": "Impossible de supprimer la question"
+            }), 400
     else:
         return jsonify({
             "status": 400,
-            "reason": "Impossible de supprimer la question"
+            "reason": "Session non disponible"
         }), 400
