@@ -6,11 +6,13 @@ import functions.fonctionLabels as fonctionLabels
 # fonction qui permet de récupérer les questions et les réponses créées par un utilisateur
 # sous cette forme :
 # [
-#   { "enonce": "Comment tou tou péle?",
+#   {
+#     "enonce": "Qui a calculé la circonférence de la terre en -200 av JC ?",
 #     "id": 1,
-#     "etiquette": [{"couleur": "#000000", "nom": "algo"},...],
-#     "reponses": [{"id": 1, "question": 1, "reponse": "Dounnouvahannne", "reponseJuste": 1},...],
-#     "user": 1 }
+#     "etiquette": [{"couleur": "#000000", "nom": "histoire"},...],
+#     "reponses": [{"id": 1, "question": 1, "reponse": "Ératosthène", "reponseJuste": 1},...],
+#     "user": 1
+#   }
 # ]
 def getQuestions(userId, label):
 
@@ -196,8 +198,8 @@ def deleteQuestion(id, userId):
         sql = 'DELETE FROM questions WHERE id = ? AND user=?'
         cur.execute(sql, (id, userId))
 
-        res = cur.execute("SELECT * FROM questions WHERE id = ?", (id, ))
-        res= res.fetchall()
+        res = cur.execute("SELECT * FROM questions WHERE id = ?", (id,))
+        res = res.fetchall()
         con.commit()
 
         cur.close()
