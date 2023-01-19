@@ -147,8 +147,12 @@ def getReponses(questionId):
     # On les range dans un dictionnaire pour que ce soit plus simple d'utilisation
     data = []
     for i in range(0, len(res)):
-        dico = {"id": res[i][0], "question": res[i][1], "reponse": res[i][2],
-                "reponseJuste": res[i][3]}
+        dico = {
+            "id": res[i][0],
+            "question": res[i][1],
+            "reponse": res[i][2],
+            "reponseJuste": bool(res[i][3])
+        }
         data.append(dico)
 
     # Fermeture de la connection
