@@ -33,13 +33,12 @@ def getQuestions(userId, label):
     for i in range(0, len(res)):
         # Dans le dictionnaire, on a les valeurs de la question et
         # un tableau de réponses qui contient toutes les réponses associées à la question
-        print(res)
         dico = {
             "id": res[i][1],
             "enonce": res[i][0],
             "user": res[i][2],
-            "etiquette": fonctionLabels.getLiensEtiquettes(res[i][0]),
-            "reponses": getReponses(res[i][0])
+            "etiquette": fonctionLabels.getLiensEtiquettes(res[i][1]),
+            "reponses": getReponses(res[i][1])
         }
         data.append(dico)
 
