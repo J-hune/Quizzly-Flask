@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 import app
 import functions.questions as functionQuestions
 
@@ -6,9 +6,19 @@ questions = Blueprint('questions', __name__, url_prefix='/questions')
 
 
 # Route qui renvoie les questions selon l'id d'un utilisateur
-@questions.route('/getQuestions/<userId>', methods=['GET'])
-def getQuestions(userId):
-    return functionQuestions.getQuestions(userId)
+@questions.route('/getQuestions', methods=['GET'])
+def getQuestions():
+
+    # Vérification que l'utilisateur est en session
+    if 'user' in session:
+        user = session.get("user")
+        questions = functionQuestions.getQuestions(user['id'])
+        return jsonify(questions)
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Session non disponible"
+        }), 400
 
 
 # Route qui permet l'ajout de nouvelles questions
