@@ -61,20 +61,16 @@ def addReponses():
     data = request.get_json(force=True)
 
     # Vérifie si on a nos données
-    try:
-        var = data["question"]
-        var = data["reponse"]
-        var = data["reponseJuste"]
-    except KeyError:
+    if not (data["question"] and data["reponse"] and data["reponseJuste"]):
         return jsonify({
             "status": 400,
             "reason": "First Name, Surname or Password Incomplete"
         }), 400
 
     # La fonction renvoie True si elle a ajouté dans la table et False sinon
-    if functionQuestions.addReponses(data["question"], data["reponse"], data["reponseJuste"]) :
+    if functionQuestions.addReponses(data["question"], data["reponse"], data["reponseJuste"]):
         return jsonify(success=True), 200
-    else :
+    else:
         return jsonify({
             "status": 400,
             "reason": "Insertion impossible dans la base de donnée"
