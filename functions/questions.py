@@ -132,7 +132,7 @@ def addReponses(question, reponse, reponseJuste):
 
 
 # Supprime l'étiquette donnée en paramètre dans la base de donnée
-def deleteQuestion(id):
+def deleteQuestion(id, userId):
     try:
         con = sqlite3.connect('database.db')
         cur = con.cursor()
@@ -141,14 +141,19 @@ def deleteQuestion(id):
         # car les CASCADE ont besoin de cet attribut en True
         cur.execute("PRAGMA foreign_keys = ON")
 
-        sql = 'DELETE FROM questions WHERE id = ?'
-        value = id
-        cur.execute(sql, (value,))
+        sql = 'DELETE FROM questions WHERE id = ? AND user=?'
+        cur.execute(sql, (id, userId))
+
+        res = cur.execute("SELECT * FROM questions WHERE id = ?", (id, ))
+        res= res.fetchall()
         con.commit()
 
         cur.close()
         con.close()
-        return True
+        if len(res) is 0:
+            return True
+        else:
+            return False
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la suppression !", error)
         return False

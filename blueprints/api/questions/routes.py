@@ -83,7 +83,7 @@ def deleteQuestion(id):
     # Vérification que l'utilisateur est en session
     if 'user' in session:
         user = session.get("user")
-        if functionQuestions.deleteQuestion(id):
+        if functionQuestions.deleteQuestion(id, user["id"]):
             return jsonify(success=True), 200
         else:
             return jsonify({
