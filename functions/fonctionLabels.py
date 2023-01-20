@@ -39,6 +39,7 @@ def getLabels(userId):
 
 
 # Supprime l'étiquette donnée en paramètre dans la base de donnée
+# Non utilisé dans notre cas
 def supprLabel(nomLabel):
     if searchLabel(nomLabel):
         try:

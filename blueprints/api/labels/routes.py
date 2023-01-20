@@ -5,18 +5,6 @@ import app
 label = Blueprint('labels', __name__, url_prefix='/labels')
 
 
-@label.route('/supprimerLabel/<name>', methods=['GET'])
-def supprimerLabel(name):
-    # Si la suppression de l'étiquette a réussi
-    if fonctionLabels.supprLabel(name):
-        return jsonify(success=True), 200
-    else:
-        return jsonify({
-            "status": 401,
-            "reason": "Impossible de supprimer l'étiquette"
-        }), 401
-
-
 @label.route('/getLabels', methods=['GET'])
 def getLabels():
     # Vérification que l'utilisateur est en session
