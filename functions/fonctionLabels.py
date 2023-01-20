@@ -1,8 +1,8 @@
 import sqlite3
 
 
-# Retourne tous les labels qu'un utilisateur utilise
-def getLabels(userId):
+# Retourne tous les labels que l'utilisateur utilise
+def getLabelsUsed(userId):
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
@@ -10,8 +10,25 @@ def getLabels(userId):
            "    SELECT etiquettes.nom, etiquettes.couleur FROM etiquettes\n"
            "        JOIN liensEtiquettesQuestions ON liensEtiquettesQuestions.etiquettes = etiquettes.nom\n"
            "        JOIN questions ON questions.id = liensEtiquettesQuestions.questions\n"
-           "        WHERE questions.user = ?\n"
-           "        GROUP BY etiquettes.nom, etiquettes.couleur")
+           "        WHERE questions.user = ?\n "
+           "        GROUP BY etiquettes.nom, etiquettes.user, etiquettes.couleur")
+
+    res = cur.execute(sql, (userId,))
+    res = res.fetchall()
+    cur.close()
+    con.close()
+
+    return res
+
+
+# Retourne tous les labels de l'utilisateur
+def getLabels(userId):
+    con = sqlite3.connect('database.db')
+    cur = con.cursor()
+
+    sql = ("\n"
+           "    SELECT etiquettes.nom, etiquettes.couleur FROM etiquettes\n"
+           "        WHERE user = ?")
 
     res = cur.execute(sql, (userId,))
     res = res.fetchall()
@@ -74,14 +91,14 @@ def searchLabel(nomLabel):
 
 
 # Ajoute une étiquette avec une couleur choisie dans la base de donnée
-def addLabel(nomLabel, couleur):
+def addLabel(nomLabel, couleur, userID):
     if not searchLabel(nomLabel):
         try:
             con = sqlite3.connect('database.db')
             cur = con.cursor()
 
-            sql = 'INSERT INTO etiquettes VALUES(?,?)'
-            value = (nomLabel, couleur)
+            sql = 'INSERT INTO etiquettes VALUES(?,?,?)'
+            value = (nomLabel, couleur, userID)
             cur.execute(sql, value)
             con.commit()
             print("Etiquette créée !")
@@ -120,13 +137,13 @@ def addLiensEtiquettesQuestions(etiquette, question):
 
 # Fonction qui récupère les données des étiquettes associées a une question
 # et les renvoie sous forme de dico {"nom": ... , "couleur": ...}
-def getLiensEtiquettes(questionId):
+def getLiensEtiquettes(questionId, userId):
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
-    res = cur.execute("""SELECT nom, couleur FROM etiquettes e 
-                    JOIN liensEtiquettesQuestions l ON e.nom = l.etiquettes 
-                    WHERE questions=?""", (questionId,))
+    res = cur.execute("""SELECT nom, couleur FROM etiquettes
+                    JOIN liensEtiquettesQuestions ON etiquettes.nom = liensEtiquettesQuestions.etiquettes 
+                    WHERE liensEtiquettesQuestions.questions=? AND etiquettes.user=?""", (questionId, userId))
     res = res.fetchall()
     data = []
     for i in range(0, len(res)):
