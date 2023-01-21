@@ -22,11 +22,18 @@ def getQuestions(userId, label):
 
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
     # et seulement celle qui ont une etiquette
-    sql = """SELECT questions.enonce, questions.id, questions.user FROM questions 
+
+    if label is not None:
+        sql = """SELECT questions.enonce, questions.id, questions.user FROM questions 
              JOIN liensEtiquettesQuestions ON liensEtiquettesQuestions.questions = questions.id
              WHERE questions.user = ? AND liensEtiquettesQuestions.etiquettes = ?"""
+        parameters = (userId, label)
 
-    res = cur.execute(sql, (userId, label))
+    else:
+        sql = "SELECT questions.enonce, questions.id, questions.user FROM questions WHERE questions.user = ?"
+        parameters = (userId, )
+
+    res = cur.execute(sql, parameters)
     res = res.fetchall()
 
 

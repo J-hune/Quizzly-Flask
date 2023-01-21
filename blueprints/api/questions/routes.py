@@ -6,8 +6,9 @@ questions = Blueprint('questions', __name__, url_prefix='/questions')
 
 
 # Route qui renvoie les questions selon l'id d'un utilisateur
+@questions.route('/getQuestions/', methods=['GET'])
 @questions.route('/getQuestions/<label>', methods=['GET'])
-def getQuestions(label):
+def getQuestions(label=None):
     # Vérification que l'utilisateur est en session
     if 'user' in session:
         user = session.get("user")
@@ -43,7 +44,6 @@ def getQuestion(id):
 # Route qui permet l'ajout de nouvelles questions
 @questions.route('/addQuestion', methods=['POST'])
 def addQuestion():
-
     # Je suis parti du principe que data est de cette forme
     # data = {
     #   "enonce": "Ceci est une question de test avec beaucoup de mots",
@@ -112,7 +112,6 @@ def addReponses():
 # Route qui permet de supprimer une question
 @questions.route('/deleteQuestion/<id>', methods=['GET'])
 def deleteQuestion(id):
-
     # Vérification que l'utilisateur est en session
     if 'user' in session:
         user = session.get("user")
@@ -133,7 +132,6 @@ def deleteQuestion(id):
 # Route qui permet d'editer une question
 @questions.route('/editQuestion/<id>', methods=['POST', 'GET'])
 def editQuestion(id):
-
     # Je suis parti du principe que data est de cette forme
     # {
     #   "enonce": "Ceci est une question de test avec beaucoup de mots",
@@ -158,11 +156,11 @@ def editQuestion(id):
         data = request.get_json(force=True)
         user = session.get("user")
         if functionQuestions.editQuestion(id,
-                data["enonce"],
-                user["id"],
-                data["etiquettes"],
-                data["reponses"]
-        ):
+                                          data["enonce"],
+                                          user["id"],
+                                          data["etiquettes"],
+                                          data["reponses"]
+                                          ):
             return jsonify(success=True), 200
         else:
             return jsonify({
