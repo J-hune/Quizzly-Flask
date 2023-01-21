@@ -108,6 +108,7 @@ def addReponses():
             "reason": "Insertion impossible dans la base de donnée"
         }), 400
 
+
 # Route qui permet de supprimer une question
 @questions.route('/deleteQuestion/<id>', methods=['GET'])
 def deleteQuestion(id):
@@ -127,6 +128,7 @@ def deleteQuestion(id):
             "status": 400,
             "reason": "Session non disponible"
         }), 400
+
 
 # Route qui permet d'editer une question
 @questions.route('/editQuestion/<id>', methods=['POST', 'GET'])

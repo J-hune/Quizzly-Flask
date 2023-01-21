@@ -39,7 +39,7 @@ def getQuestions(userId, label):
             "id": res[i][1],
             "enonce": res[i][0],
             "user": res[i][2],
-            "etiquette": fonctionLabels.getLiensEtiquettes(res[i][1], userId),
+            "etiquettes": fonctionLabels.getLiensEtiquettes(res[i][1], userId),
             "reponses": getReponses(res[i][1])
         }
         data.append(dico)
@@ -85,7 +85,7 @@ def getQuestion(userId, id):
         "id": res[1],
         "enonce": res[0],
         "user": res[2],
-        "etiquette": fonctionLabels.getLiensEtiquettes(res[1], userId),
+        "etiquettes": fonctionLabels.getLiensEtiquettes(res[1], userId),
         "reponses": getReponses(res[1])
     }
 
