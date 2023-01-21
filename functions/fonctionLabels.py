@@ -10,7 +10,7 @@ def getLabelsUsed(userId):
            "    SELECT etiquettes.nom, etiquettes.couleur FROM etiquettes\n"
            "        JOIN liensEtiquettesQuestions ON liensEtiquettesQuestions.etiquettes = etiquettes.nom\n"
            "        JOIN questions ON questions.id = liensEtiquettesQuestions.questions\n"
-           "        WHERE questions.user = ?\n "
+           "        WHERE questions.user = ?\n AND questions.user = etiquettes.user"
            "        GROUP BY etiquettes.nom, etiquettes.user, etiquettes.couleur")
 
     res = cur.execute(sql, (userId,))
@@ -98,11 +98,10 @@ def addLabel(nomLabel, couleur, userID):
             con = sqlite3.connect('database.db')
             cur = con.cursor()
 
-            sql = 'INSERT INTO etiquettes VALUES(?,?,?)'
+            sql = "INSERT INTO etiquettes VALUES(?,?,?)"
             value = (nomLabel, couleur, userID)
             cur.execute(sql, value)
             con.commit()
-            print("Etiquette créée !")
 
             cur.close()
             con.close()
