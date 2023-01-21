@@ -115,15 +115,15 @@ def addLabel(nomLabel, couleur, userID):
         return False
 
 
-# Requêtes pour ajouter un nouveau lien entre une question et une étiquette pré-requis
-# on a la question et l'étiquette dans la BDD
-def addLiensEtiquettesQuestions(etiquette, question):
+# Requêtes pour ajouter un nouveau lien entre une question et une étiquette
+# pré-requis on a la question et l'étiquette dans la BDD
+def addLiensEtiquettesQuestions(etiquette, question, userID):
     try:
         con = sqlite3.connect('database.db')
         cur = con.cursor()
 
-        sql = 'INSERT INTO liensEtiquettesQuestions VALUES(?,?)'
-        value = (etiquette, question)
+        sql = 'INSERT INTO liensEtiquettesQuestions VALUES(?,?,?)'
+        value = (etiquette, question, userID)
         cur.execute(sql, value)
         con.commit()
 
