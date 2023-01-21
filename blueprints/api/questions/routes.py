@@ -45,10 +45,23 @@ def getQuestion(id):
 def addQuestion():
 
     # Je suis parti du principe que data est de cette forme
-    # {"enonce" : "Est-ce que l'algo et le php sont amusants ?",
-    #     # "liensEtiquettesQuestions": ["algo", "php"],
-    #     # "reponses": [ {"reponse": "Non", "reponseJuste":0 }, {"reponse": "Oui", "reponseJuste":1 } ]
-    #     # }
+    # data = {
+    #   "enonce": "Ceci est une question de test avec beaucoup de mots",
+    #   "etiquettes": [
+    #     {
+    #       "couleur": "000000",
+    #       "nom": "algo"
+    #     }
+    #   ],
+    #   "id": 8,
+    #   "reponses": [
+    #     {
+    #       "reponse": "",
+    #       "reponseJuste": false
+    #     }
+    #   ],
+    #   "user": 5
+    # }
 
     # Vérification que l'utilisateur est en session
     if 'user' in session:
@@ -57,7 +70,7 @@ def addQuestion():
         if functionQuestions.addQuestions(
                 data["enonce"],
                 user["id"],
-                data["liensEtiquettesQuestions"],
+                data["etiquettes"],
                 data["reponses"]
         ):
             return jsonify(success=True), 200
@@ -95,7 +108,7 @@ def addReponses():
             "reason": "Insertion impossible dans la base de donnée"
         }), 400
 
-
+# Route qui permet de supprimer une question
 @questions.route('/deleteQuestion/<id>', methods=['GET'])
 def deleteQuestion(id):
 
@@ -108,6 +121,51 @@ def deleteQuestion(id):
             return jsonify({
                 "status": 400,
                 "reason": "Impossible de supprimer la question"
+            }), 400
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Session non disponible"
+        }), 400
+
+# Route qui permet d'editer une question
+@questions.route('/editQuestion/<id>', methods=['POST', 'GET'])
+def editQuestion(id):
+
+    # Je suis parti du principe que data est de cette forme
+    # {
+    #   "enonce": "Ceci est une question de test avec beaucoup de mots",
+    #   "etiquettes": [
+    #     {
+    #       "couleur": "000000",
+    #       "nom": "algo"
+    #     }
+    #   ],
+    #   "id": 8,
+    #   "reponses": [
+    #     {
+    #       "reponse": "",
+    #       "reponseJuste": false
+    #     }
+    #   ],
+    #   "user": 5
+    # }
+
+    # Vérification que l'utilisateur est en session
+    if 'user' in session:
+        data = request.get_json(force=True)
+        user = session.get("user")
+        if functionQuestions.editQuestion(id,
+                data["enonce"],
+                user["id"],
+                data["etiquettes"],
+                data["reponses"]
+        ):
+            return jsonify(success=True), 200
+        else:
+            return jsonify({
+                "status": 400,
+                "reason": "Ajout des données impossible"
             }), 400
     else:
         return jsonify({

@@ -101,7 +101,16 @@ def getQuestion(userId, id):
 
 # fonction qui permet l'ajout d'une question (ses reponses, et ses etiquettes)
 # faite par un utilisateur dans la table des questions
-def addQuestions(enonce, user, liensEtiquettesQuestions, reponses):
+def addQuestions(enonce, user, etiquettes, reponses):
+
+    # Verification qu'il y a une réponse juste dans le lot
+    repJuste = False
+    for i in range(0, len(reponses)):
+        if reponses[i]["reponseJuste"] :
+            repJuste = True
+    if not repJuste:
+        return False
+
     try:
         # Connection à la table
         con = sqlite3.connect('database.db')
@@ -122,12 +131,16 @@ def addQuestions(enonce, user, liensEtiquettesQuestions, reponses):
 
         # On ajoute tous les liens entre les étiquettes et les questions
         # en ayant comme prérequis que les étiquettes sont déjà créées et la question aussi
-        for i in range(0, len(liensEtiquettesQuestions)):
-            fonctionLabels.addLiensEtiquettesQuestions(liensEtiquettesQuestions[i], questionsId)
+        for i in range(0, len(etiquettes)):
+            fonctionLabels.addLiensEtiquettesQuestions(etiquettes[i]["nom"], questionsId, user)
 
         # On ajoute toutes les réponses associées à la question
         for i in range(0, len(reponses)):
-            addReponses(questionsId, reponses[i]["reponse"], reponses[i]["reponseJuste"])
+            if len(reponses[i]) != 0:
+                reponseJuste = 0
+                if(reponses[i]["reponseJuste"]):
+                    reponseJuste = 1
+                addReponses(questionsId, reponses[i]["reponse"], reponseJuste)
 
         return True
     except sqlite3.Error as error:
@@ -204,10 +217,61 @@ def deleteQuestion(id, userId):
 
         cur.close()
         con.close()
-        if len(res) is 0:
+        if len(res) == 0:
             return True
         else:
             return False
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la suppression !", error)
+        return False
+
+
+# Edit une question, c'est-à-dire supprime la question et la remet dans la base de données
+# ATTENTION à l'id qui change
+def editQuestion(id ,enonce, user, etiquettes, reponses):
+    # Verifie si l'id correspond à une question faite par l'user
+    if not deleteQuestion(id, user):
+        return False
+    # Verification qu'il y a une réponse juste dans le lot
+    repJuste = False
+    for i in range(0, len(reponses)):
+        if reponses[i]["reponseJuste"]:
+            repJuste = True
+    if not repJuste:
+        return False
+
+    try:
+        # Connection à la table
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+
+        # Insertion de la nouvelle question dans la table des questions
+        sql = "INSERT INTO questions (enonce, user) VALUES (?, ?);"
+        data = (enonce, user)
+        cur.execute(sql, data)
+        con.commit()
+
+        # Ensuite, on récupère l'id de la dernière question insérée
+        questionsId = cur.lastrowid
+
+        # Fermeture de la connection
+        cur.close()
+        con.close()
+
+        # On ajoute tous les liens entre les étiquettes et les questions
+        # en ayant comme prérequis que les étiquettes sont déjà créées et la question aussi
+        for i in range(0, len(etiquettes)):
+            fonctionLabels.addLiensEtiquettesQuestions(etiquettes[i]["nom"], questionsId,user)
+
+        # On ajoute toutes les réponses associées à la question
+        for i in range(0, len(reponses)):
+            if len(reponses[i]) != 0:
+                reponseJuste = 0
+                if (reponses[i]["reponseJuste"]):
+                    reponseJuste = 1
+                addReponses(questionsId, reponses[i]["reponse"], reponseJuste)
+
+        return True
+    except sqlite3.Error as error:
+        print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
         return False
