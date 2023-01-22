@@ -16,7 +16,7 @@ def registerUser(firstname, surname, password):
 
     # Ajout de l'utilisateur en bdd
     dataToInsert = (0, surname, firstname, hashedPassword)
-    sql = "INSERT INTO users(type, nom, prenom, password) VALUES(?,?,?,?)"
+    sql = "INSERT INTO Utilisateurs(type, nom, prenom, mdp) VALUES(?,?,?,?)"
     cursor.execute(sql, dataToInsert)
     connection.commit()
 
@@ -44,7 +44,7 @@ def userExists(firstname, surname, password):
 
     # Récupérations de tous les utilisateurs qui ont ce couple nom prénom
     dataToInsert = (surname, firstname)
-    sql = "SELECT * FROM users WHERE nom = ? AND prenom = ?"
+    sql = "SELECT * FROM Utilisateurs WHERE nom = ? AND prenom = ?"
     cursor.execute(sql, dataToInsert)
 
     # Pour chaque utilisateur
@@ -56,7 +56,7 @@ def userExists(firstname, surname, password):
                 'id': i[0],
                 'firstname': i[3],
                 'surname': i[2],
-                'type': i[2]
+                'type': i[1]
             }
             session.permanent = True
             return True

@@ -8,7 +8,7 @@ def getUsers():
     cur = con.cursor()
 
     # Selection de tous les utilisateurs
-    res = cur.execute("SELECT * FROM users")
+    res = cur.execute("SELECT * FROM Utilisateurs")
     res = res.fetchall()
 
     # Fermeture de la connection
@@ -24,7 +24,7 @@ def getUser(userId):
     cur = con.cursor()
 
     # Selection de l'utilisateur selon son id
-    res = cur.execute("SELECT * FROM users WHERE id=?", (userId,))
+    res = cur.execute("SELECT * FROM Utilisateurs WHERE id=?", (userId,))
     res = res.fetchall()
 
     # Fermeture de la connection
@@ -41,8 +41,8 @@ def addUser(nom, prenom, password):
         cur = con.cursor()
 
         # Insertion des données dans la table
-        sql = """INSERT INTO users
-                (nom, prenom, password) 
+        sql = """INSERT INTO Utilisateurs
+                (nom, prenom, mdp) 
                 VALUES (?, ?, ?);"""
         data = (nom, prenom, password)
         cur.execute(sql, data)

@@ -8,10 +8,9 @@ def getLabelsUsed(userId):
 
     sql = ("\n"
            "    SELECT etiquettes.nom, etiquettes.couleur FROM etiquettes\n"
-           "        JOIN liensEtiquettesQuestions ON liensEtiquettesQuestions.etiquettes = etiquettes.nom\n"
-           "        JOIN questions ON questions.id = liensEtiquettesQuestions.questions\n"
-           "        WHERE questions.user = ?\n AND questions.user = etiquettes.user"
-           "        GROUP BY etiquettes.nom, etiquettes.user, etiquettes.couleur")
+           "        JOIN liensEtiquettesQuestions ON liensEtiquettesQuestions.etiquette = etiquettes.id\n"
+           "        JOIN utilisateurs ON etiquettes.utilisateur=utilisateurs.id"
+           "        WHERE utilisateurs.id = ?")
 
     res = cur.execute(sql, (userId,))
     res = res.fetchall()
@@ -28,7 +27,7 @@ def getLabels(userId):
 
     sql = ("\n"
            "    SELECT etiquettes.nom, etiquettes.couleur FROM etiquettes\n"
-           "        WHERE user = ?")
+           "        WHERE utilisateur = ?")
 
     res = cur.execute(sql, (userId,))
     res = res.fetchall()
@@ -98,7 +97,7 @@ def addLabel(nomLabel, couleur, userID):
             con = sqlite3.connect('database.db')
             cur = con.cursor()
 
-            sql = "INSERT INTO etiquettes VALUES(?,?,?)"
+            sql = "INSERT INTO etiquettes ('nom','couleur','utilisateur') VALUES(?,?,?)"
             value = (nomLabel, couleur, userID)
             cur.execute(sql, value)
             con.commit()
@@ -121,14 +120,23 @@ def addLiensEtiquettesQuestions(etiquette, question, userID):
         con = sqlite3.connect('database.db')
         cur = con.cursor()
 
-        sql = 'INSERT INTO liensEtiquettesQuestions VALUES(?,?,?)'
-        value = (etiquette, question, userID)
-        cur.execute(sql, value)
-        con.commit()
+        sql = 'SELECT id FROM Etiquettes WHERE nom=? AND utilisateur=?'
+        value = (etiquette, userID)
+        res = cur.execute(sql, value)
+        res = res.fetchall()
+        if len(res)!=0 or len(res[0])!=0:
 
-        cur.close()
-        con.close()
-        return True
+            sql = 'INSERT INTO liensEtiquettesQuestions VALUES(?,?)'
+            value = (question, res[0][0])
+            cur.execute(sql, value)
+            con.commit()
+            cur.close()
+            con.close()
+            return True
+        else:
+            cur.close()
+            con.close()
+            return False
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question!", error)
@@ -142,8 +150,8 @@ def getLiensEtiquettes(questionId, userId):
     cur = con.cursor()
 
     res = cur.execute("""SELECT nom, couleur FROM etiquettes
-                    JOIN liensEtiquettesQuestions ON etiquettes.nom = liensEtiquettesQuestions.etiquettes 
-                    WHERE liensEtiquettesQuestions.questions=? AND etiquettes.user=?""", (questionId, userId))
+                    JOIN liensEtiquettesQuestions ON etiquettes.id = liensEtiquettesQuestions.etiquette 
+                    WHERE liensEtiquettesQuestions.question=? AND etiquettes.utilisateur=?""", (questionId, userId))
     res = res.fetchall()
     data = []
     for i in range(0, len(res)):
