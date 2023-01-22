@@ -1,5 +1,4 @@
 from flask import Flask
-import sqlite3
 from blueprints.api.routes import api
 from flask_cors import CORS
 
@@ -15,8 +14,6 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax"
 )
 
-con = sqlite3.connect('database.db')
-cur = con.cursor()
 
 if __name__ == '__main__':
     app.run()
