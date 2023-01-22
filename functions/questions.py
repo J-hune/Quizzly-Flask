@@ -20,12 +20,20 @@ def getQuestions(userId, label):
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
-    # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celui-ci
-    sql = """SELECT questions.enonce, questions.id, questions.utilisateur FROM questions q
+    # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
+    # et seulement celle qui ont une etiquette
+
+    if label is not None:
+        sql = """SELECT questions.enonce, questions.id, questions.utilisateur FROM questions q
              JOIN liensEtiquettesQuestions l ON l.question = q.id JOIN Etiquettes e ON e.id= l.etiquette
              WHERE questions.utilisateur = ? AND e.nom = ?"""
+        parameters = (userId, label)
 
-    res = cur.execute(sql, (userId, label))
+    else:
+        sql = "SELECT questions.enonce, questions.id, questions.utilisateur FROM questions WHERE questions.utilisateur = ?"
+        parameters = (userId, )
+
+    res = cur.execute(sql, parameters)
     res = res.fetchall()
 
 
@@ -69,8 +77,8 @@ def getQuestion(userId, id):
 
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
     # et seulement celle qui ont une etiquette
-    sql = """SELECT Questions.enonce, Questions.id, Questions.utilisateur FROM Questions 
-             WHERE Questions.utilisateur = ? AND id = ?"""
+    sql = """SELECT questions.enonce, questions.id, questions.user FROM questions 
+             WHERE questions.user = ? AND id = ?"""
 
     res = cur.execute(sql, (userId, id))
     res = res.fetchone()
@@ -110,7 +118,7 @@ def addQuestions(enonce, user, etiquettes, reponses):
         cur = con.cursor()
 
         # Insertion de la nouvelle question dans la table des questions
-        sql = "INSERT INTO questions (enonce, utilisateur) VALUES (?, ?);"
+        sql = "INSERT INTO questions (enonce, user) VALUES (?, ?);"
         data = (enonce, user)
         cur.execute(sql, data)
         con.commit()
@@ -157,9 +165,9 @@ def getReponses(questionId):
     for i in range(0, len(res)):
         dico = {
             "id": res[i][0],
-            "question": res[i][3],
-            "reponse": res[i][1],
-            "reponseJuste": bool(res[i][2])
+            "question": res[i][1],
+            "reponse": res[i][2],
+            "reponseJuste": bool(res[i][3])
         }
         data.append(dico)
 
@@ -177,8 +185,8 @@ def addReponses(question, reponse, reponseJuste):
         cur = con.cursor()
 
         # insertion des données dans la table des reponses
-        sql = "INSERT INTO reponses (reponse,reponseJuste, question) VALUES (?, ?, ?)";
-        data = (reponse, reponseJuste, question)
+        sql = "INSERT INTO reponses (question, reponse,reponseJuste) VALUES (?, ?, ?)";
+        data = (question, reponse, reponseJuste)
         cur.execute(sql, data)
         con.commit()
 
@@ -201,7 +209,7 @@ def deleteQuestion(id, userId):
         # car les CASCADE ont besoin de cet attribut en True
         cur.execute("PRAGMA foreign_keys = ON")
 
-        sql = 'DELETE FROM questions WHERE id = ? AND utilisateur=?'
+        sql = 'DELETE FROM questions WHERE id = ? AND user=?'
         cur.execute(sql, (id, userId))
 
         res = cur.execute("SELECT * FROM questions WHERE id = ?", (id,))
