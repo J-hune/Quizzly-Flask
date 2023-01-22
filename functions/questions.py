@@ -24,9 +24,9 @@ def getQuestions(userId, label):
     # et seulement celle qui ont une etiquette
 
     if label is not None:
-        sql = """SELECT questions.enonce, questions.id, questions.utilisateur FROM questions q
+        sql = """SELECT q.enonce, q.id, q.utilisateur FROM questions q
              JOIN liensEtiquettesQuestions l ON l.question = q.id JOIN Etiquettes e ON e.id= l.etiquette
-             WHERE questions.utilisateur = ? AND e.nom = ?"""
+             WHERE q.utilisateur = ? AND e.nom = ?"""
         parameters = (userId, label)
 
     else:
@@ -77,8 +77,8 @@ def getQuestion(userId, id):
 
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
     # et seulement celle qui ont une etiquette
-    sql = """SELECT questions.enonce, questions.id, questions.user FROM questions 
-             WHERE questions.user = ? AND id = ?"""
+    sql = """SELECT questions.enonce, questions.id, questions.utilisateur FROM questions 
+             WHERE questions.utilisateur = ? AND id = ?"""
 
     res = cur.execute(sql, (userId, id))
     res = res.fetchone()
@@ -118,7 +118,7 @@ def addQuestions(enonce, user, etiquettes, reponses):
         cur = con.cursor()
 
         # Insertion de la nouvelle question dans la table des questions
-        sql = "INSERT INTO questions (enonce, user) VALUES (?, ?);"
+        sql = "INSERT INTO questions (enonce, utilisateur) VALUES (?, ?);"
         data = (enonce, user)
         cur.execute(sql, data)
         con.commit()
@@ -137,7 +137,7 @@ def addQuestions(enonce, user, etiquettes, reponses):
 
         # On ajoute toutes les réponses associées à la question
         for i in range(0, len(reponses)):
-            if len(reponses[i]) != 0:
+            if len(reponses[i]["reponse"]) != 0:
                 reponseJuste = 0
                 if(reponses[i]["reponseJuste"]):
                     reponseJuste = 1
@@ -165,9 +165,9 @@ def getReponses(questionId):
     for i in range(0, len(res)):
         dico = {
             "id": res[i][0],
-            "question": res[i][1],
-            "reponse": res[i][2],
-            "reponseJuste": bool(res[i][3])
+            "question": res[i][3],
+            "reponse": res[i][1],
+            "reponseJuste": bool(res[i][2])
         }
         data.append(dico)
 
@@ -209,7 +209,7 @@ def deleteQuestion(id, userId):
         # car les CASCADE ont besoin de cet attribut en True
         cur.execute("PRAGMA foreign_keys = ON")
 
-        sql = 'DELETE FROM questions WHERE id = ? AND user=?'
+        sql = 'DELETE FROM questions WHERE id = ? AND utilisateur=?'
         cur.execute(sql, (id, userId))
 
         res = cur.execute("SELECT * FROM questions WHERE id = ?", (id,))

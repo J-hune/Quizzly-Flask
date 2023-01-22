@@ -6,11 +6,11 @@ def getLabelsUsed(userId):
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
-    sql = ("\n"
-           "    SELECT etiquettes.nom, etiquettes.couleur FROM etiquettes\n"
-           "        JOIN liensEtiquettesQuestions ON liensEtiquettesQuestions.etiquette = etiquettes.id\n"
-           "        JOIN utilisateurs ON etiquettes.utilisateur=utilisateurs.id"
-           "        WHERE utilisateurs.id = ?")
+    sql = ("SELECT DISTINCT e.nom, e.couleur FROM etiquettes e\n" +
+           " JOIN liensEtiquettesQuestions leq ON e.id = leq.etiquette\n"
+           " JOIN questions q ON leq.question = q.id\n"
+           " WHERE q.utilisateur = ?"
+           )
 
     res = cur.execute(sql, (userId,))
     res = res.fetchall()
@@ -124,7 +124,7 @@ def addLiensEtiquettesQuestions(etiquette, question, userID):
         value = (etiquette, userID)
         res = cur.execute(sql, value)
         res = res.fetchall()
-        if len(res)!=0 or len(res[0])!=0:
+        if len(res) != 0 or len(res[0]) != 0:
 
             sql = 'INSERT INTO liensEtiquettesQuestions VALUES(?,?)'
             value = (question, res[0][0])
