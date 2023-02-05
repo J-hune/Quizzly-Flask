@@ -3,7 +3,7 @@ import sqlite3
 import functions.fonctionLabels as fonctionLabels
 
 
-# fonction qui permet de récupérer les questions et les réponses créées par un utilisateur
+# fonction qui permet de récupérer les questions et les réponses créées par un enseignant
 # sous cette forme :
 # [
 #   {
@@ -24,13 +24,13 @@ def getQuestions(userId, label):
     # et seulement celle qui ont une etiquette
 
     if label is not None:
-        sql = """SELECT q.enonce, q.id, q.utilisateur FROM questions q
+        sql = """SELECT q.enonce, q.id, q.enseignant FROM questions q
              JOIN liensEtiquettesQuestions l ON l.question = q.id JOIN Etiquettes e ON e.id= l.etiquette
-             WHERE q.utilisateur = ? AND e.nom = ?"""
+             WHERE q.enseignant = ? AND e.nom = ?"""
         parameters = (userId, label)
 
     else:
-        sql = "SELECT questions.enonce, questions.id, questions.utilisateur FROM questions WHERE questions.utilisateur = ?"
+        sql = "SELECT questions.enonce, questions.id, questions.enseignant FROM questions WHERE questions.enseignant = ?"
         parameters = (userId, )
 
     res = cur.execute(sql, parameters)
@@ -77,8 +77,8 @@ def getQuestion(userId, id):
 
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
     # et seulement celle qui ont une etiquette
-    sql = """SELECT questions.enonce, questions.id, questions.utilisateur FROM questions 
-             WHERE questions.utilisateur = ? AND id = ?"""
+    sql = """SELECT Questions.enonce, Questions.id, Questions.enseignant FROM Questions 
+             WHERE Questions.enseignant = ? AND id = ?"""
 
     res = cur.execute(sql, (userId, id))
     res = res.fetchone()
@@ -107,7 +107,7 @@ def getQuestion(userId, id):
 
 
 # fonction qui permet l'ajout d'une question (ses reponses, et ses etiquettes)
-# faite par un utilisateur dans la table des questions
+# faite par un enseignant dans la table des questions
 def addQuestions(enonce, user, etiquettes, reponses):
 
     if len(reponses)==0 or len(reponses[0])==0:
@@ -118,7 +118,7 @@ def addQuestions(enonce, user, etiquettes, reponses):
         cur = con.cursor()
 
         # Insertion de la nouvelle question dans la table des questions
-        sql = "INSERT INTO questions (enonce, utilisateur) VALUES (?, ?);"
+        sql = "INSERT INTO Questions (enonce, enseignant) VALUES (?, ?);"
         data = (enonce, user)
         cur.execute(sql, data)
         con.commit()
@@ -157,7 +157,7 @@ def getReponses(questionId):
     cur = con.cursor()
 
     # Requêtes pour récupérer toutes les réponses associées à la question grâce à l'id de celle-ci
-    res = cur.execute("SELECT * FROM reponses WHERE question=?", (questionId,))
+    res = cur.execute("SELECT * FROM Reponses WHERE question=?", (questionId,))
     res = res.fetchall()
 
     # On les range dans un dictionnaire pour que ce soit plus simple d'utilisation
@@ -185,7 +185,7 @@ def addReponses(question, reponse, reponseJuste):
         cur = con.cursor()
 
         # insertion des données dans la table des reponses
-        sql = "INSERT INTO reponses (question, reponse,reponseJuste) VALUES (?, ?, ?)";
+        sql = "INSERT INTO Reponses (question, reponse, reponseJuste) VALUES (?, ?, ?)";
         data = (question, reponse, reponseJuste)
         cur.execute(sql, data)
         con.commit()
@@ -209,10 +209,10 @@ def deleteQuestion(id, userId):
         # car les CASCADE ont besoin de cet attribut en True
         cur.execute("PRAGMA foreign_keys = ON")
 
-        sql = 'DELETE FROM questions WHERE id = ? AND utilisateur=?'
+        sql = 'DELETE FROM Questions WHERE id = ? AND enseignant=?'
         cur.execute(sql, (id, userId))
 
-        res = cur.execute("SELECT * FROM questions WHERE id = ?", (id,))
+        res = cur.execute("SELECT * FROM Questions WHERE id = ?", (id,))
         res = res.fetchall()
         con.commit()
 

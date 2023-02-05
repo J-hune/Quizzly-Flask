@@ -1,15 +1,15 @@
 import sqlite3
 
 
-# Retourne tous les labels que l'utilisateur utilise
+# Retourne tous les labels que l'enseignant utilise
 def getLabelsUsed(userId):
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
-    sql = ("SELECT DISTINCT e.nom, e.couleur FROM etiquettes e\n" +
+    sql = ("SELECT DISTINCT e.nom, e.couleur FROM Etiquettes e\n" +
            " JOIN liensEtiquettesQuestions leq ON e.id = leq.etiquette\n"
-           " JOIN questions q ON leq.question = q.id\n"
-           " WHERE q.utilisateur = ?"
+           " JOIN Questions q ON leq.question = q.id\n"
+           " WHERE q.enseignant = ?"
            )
 
     res = cur.execute(sql, (userId,))
@@ -20,14 +20,14 @@ def getLabelsUsed(userId):
     return res
 
 
-# Retourne tous les labels de l'utilisateur
+# Retourne tous les labels de l'enseignant
 def getLabels(userId):
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
     sql = ("\n"
-           "    SELECT etiquettes.nom, etiquettes.couleur FROM etiquettes\n"
-           "        WHERE utilisateur = ?")
+           "    SELECT Etiquettes.nom, Etiquettes.couleur FROM Etiquettes\n"
+           "        WHERE enseignant = ?")
 
     res = cur.execute(sql, (userId,))
     res = res.fetchall()
@@ -45,10 +45,10 @@ def supprLabel(nomLabel):
             con = sqlite3.connect('database.db')
             cur = con.cursor()
 
-            sql = 'DELETE FROM etiquettes WHERE nom = ?'
+            sql = 'DELETE FROM Etiquettes WHERE nom = ?'
             cur.execute(sql, (nomLabel,))
             con.commit()
-            print("L'étiquette a été supprimée!")
+            print("L'étiquette a été supprimée !")
 
             cur.close()
             con.close()
@@ -68,7 +68,7 @@ def searchLabel(nomLabel):
         con = sqlite3.connect('database.db')
         cur = con.cursor()
 
-        sql = 'SELECT * FROM etiquettes WHERE nom= ?'
+        sql = 'SELECT * FROM Etiquettes WHERE nom= ?'
         value = nomLabel
         # Récupères les données
         res = cur.execute(sql, (value,))
@@ -97,7 +97,7 @@ def addLabel(nomLabel, couleur, userID):
             con = sqlite3.connect('database.db')
             cur = con.cursor()
 
-            sql = "INSERT INTO etiquettes ('nom','couleur','utilisateur') VALUES(?,?,?)"
+            sql = "INSERT INTO Etiquettes ('nom','couleur','enseignant') VALUES(?,?,?)"
             value = (nomLabel, couleur, userID)
             cur.execute(sql, value)
             con.commit()
@@ -107,7 +107,7 @@ def addLabel(nomLabel, couleur, userID):
             return True
 
         except sqlite3.Error as error:
-            print("Une erreur est survenue lors de la création de l'étiquette!", error)
+            print("Une erreur est survenue lors de la création de l'étiquette !", error)
             return False
     else:
         return False
@@ -120,7 +120,7 @@ def addLiensEtiquettesQuestions(etiquette, question, userID):
         con = sqlite3.connect('database.db')
         cur = con.cursor()
 
-        sql = 'SELECT id FROM Etiquettes WHERE nom=? AND utilisateur=?'
+        sql = 'SELECT id FROM Etiquettes WHERE nom=? AND enseignant=?'
         value = (etiquette, userID)
         res = cur.execute(sql, value)
         res = res.fetchall()
@@ -139,7 +139,7 @@ def addLiensEtiquettesQuestions(etiquette, question, userID):
             return False
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question!", error)
+        print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question !", error)
         return False
 
 
@@ -149,9 +149,9 @@ def getLiensEtiquettes(questionId, userId):
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
-    res = cur.execute("""SELECT nom, couleur FROM etiquettes
-                    JOIN liensEtiquettesQuestions ON etiquettes.id = liensEtiquettesQuestions.etiquette 
-                    WHERE liensEtiquettesQuestions.question=? AND etiquettes.utilisateur=?""", (questionId, userId))
+    res = cur.execute("""SELECT nom, couleur FROM Etiquettes
+                    JOIN liensEtiquettesQuestions ON Etiquettes.id = liensEtiquettesQuestions.etiquette 
+                    WHERE liensEtiquettesQuestions.question=? AND Etiquettes.enseignant=?""", (questionId, userId))
     res = res.fetchall()
     data = []
     for i in range(0, len(res)):
