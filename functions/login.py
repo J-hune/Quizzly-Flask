@@ -3,7 +3,7 @@ from flask import session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Ajoute l'utilisateur en session et en base de donnée
-def registerUser(firstname, surname, password):
+def registerUser(firstname, surname, password, userType):
     firstname = firstname.strip()
     surname = surname.strip()
     password = password.strip()
@@ -15,8 +15,8 @@ def registerUser(firstname, surname, password):
     cursor = connection.cursor()
 
     # Ajout de l'utilisateur en bdd
-    dataToInsert = (0, surname, firstname, hashedPassword)
-    sql = "INSERT INTO Utilisateurs(type, nom, prenom, mdp) VALUES(?,?,?,?)"
+    dataToInsert = (surname, firstname, hashedPassword)
+    sql = "INSERT INTO " + userType + "(nom, prenom, mdp) VALUES(?,?,?)"
     cursor.execute(sql, dataToInsert)
     connection.commit()
 
@@ -25,7 +25,7 @@ def registerUser(firstname, surname, password):
         'id': cursor.lastrowid,
         'firstname': firstname,
         'surname': surname,
-        'type': 0
+        'type': userType
     }
     session.permanent = True
 
@@ -34,7 +34,7 @@ def registerUser(firstname, surname, password):
 
 # Vérifie si l'utilisateur existe et retourne un booleen selon le cas
 # Si oui, l'utilisateur est ajouté en session
-def userExists(firstname, surname, password):
+def userExists(firstname, surname, password, userType):
     firstname = firstname.strip()
     surname = surname.strip()
     password = password.strip()
@@ -44,19 +44,19 @@ def userExists(firstname, surname, password):
 
     # Récupérations de tous les utilisateurs qui ont ce couple nom prénom
     dataToInsert = (surname, firstname)
-    sql = "SELECT * FROM Utilisateurs WHERE nom = ? AND prenom = ?"
+    sql = "SELECT * FROM " + userType + " WHERE nom = ? AND prenom = ?"
     cursor.execute(sql, dataToInsert)
 
     # Pour chaque utilisateur
     rows = cursor.fetchall()
     for i in rows:
         # Si le condensat correspond au mot de passe
-        if check_password_hash(i[4], password):
+        if check_password_hash(i[3], password):
             session["user"] = {
                 'id': i[0],
-                'firstname': i[3],
-                'surname': i[2],
-                'type': i[1]
+                'firstname': i[2],
+                'surname': i[1],
+                'type': userType
             }
             session.permanent = True
             return True

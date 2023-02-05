@@ -2,13 +2,13 @@ import sqlite3
 
 
 # Fonction qui renvoie un tableau contenant tous les utilisateurs du site
-def getUsers():
+def getUsers(userType):
     # Connection à la table
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
     # Selection de tous les utilisateurs
-    res = cur.execute("SELECT * FROM Utilisateurs")
+    res = cur.execute("SELECT * FROM " + userType)
     res = res.fetchall()
 
     # Fermeture de la connection
@@ -18,13 +18,13 @@ def getUsers():
 
 
 # Fonction qui renvoie un tableau contenant un utilisateur du site selon son id
-def getUser(userId):
+def getUser(userType, userId):
     # Connection à la table
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
     # Selection de l'utilisateur selon son id
-    res = cur.execute("SELECT * FROM Utilisateurs WHERE id=?", (userId,))
+    res = cur.execute("SELECT * FROM " + userType + " WHERE id=?", (userId,))
     res = res.fetchall()
 
     # Fermeture de la connection
@@ -34,16 +34,14 @@ def getUser(userId):
 
 
 # Fonction qui permet d'ajouter un nouvel utilisateur sur le site
-def addUser(nom, prenom, password):
+def addUser(nom, prenom, password, userType):
     try:
         # Connection à la table
         con = sqlite3.connect('database.db')
         cur = con.cursor()
 
         # Insertion des données dans la table
-        sql = """INSERT INTO Utilisateurs
-                (nom, prenom, mdp) 
-                VALUES (?, ?, ?);"""
+        sql = "INSERT INTO " + userType + "(nom, prenom, mdp) VALUES (?, ?, ?);"
         data = (nom, prenom, password)
         cur.execute(sql, data)
         con.commit()
