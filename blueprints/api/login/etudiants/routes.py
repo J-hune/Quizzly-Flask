@@ -1,25 +1,24 @@
 from flask import Blueprint, jsonify, request, session
-from functions.login import userExists
-
+from functions.login import studentExists
 
 etudiants = Blueprint('etudiants', __name__, url_prefix='/etudiants')
+
 
 @etudiants.route('/signin', methods=['POST'])
 def signin():
     data = request.get_json(force=True)
-    firstname = data.get("firstname")
-    surname = data.get("surname")
+    studentID = data.get("id")
     password = data.get("password")
 
     # Si un des champs est vide (en plus de la vérification client)
-    if not (firstname and surname and password):
+    if not (studentID and password):
         return jsonify({
             "status": 401,
-            "reason": "First Name, Surname or Password Invalid"
+            "reason": "ID or Password Invalid"
         }), 401
     else:
         # Si l'étudiant existe en base de donnée
-        if userExists(firstname, surname, password, "Etudiants"):
+        if studentExists(studentID, password):
             return jsonify(success=True), 200
         else:
             return jsonify({

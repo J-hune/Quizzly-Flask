@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, session
-from functions.login import registerUser, userExists
+from functions.login import registerUser, teacherExists
 
 enseignants = Blueprint('enseignants', __name__, url_prefix='/enseignants')
 
@@ -36,7 +36,7 @@ def signin():
         }), 401
     else:
         # Si l'enseignant existe en base de donnée
-        if userExists(firstname, surname, password, "Enseignants"):
+        if teacherExists(firstname, surname, password):
             return jsonify(success=True), 200
         else:
             return jsonify({
