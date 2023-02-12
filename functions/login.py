@@ -57,7 +57,7 @@ def teacherExists(firstname, surname, password):
                 'id': i[0],
                 'firstname': i[2],
                 'surname': i[1],
-                'type': "Enseignants"
+                'type': "Enseignant"
             }
             session.permanent = True
             return True
@@ -90,7 +90,7 @@ def studentExists(studentID, password):
                 'id': i[0],
                 'firstname': i[2],
                 'surname': i[1],
-                'type': "Etudiants"
+                'type': "Etudiant"
             }
             session.permanent = True
             return True
