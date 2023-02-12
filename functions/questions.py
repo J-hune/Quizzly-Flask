@@ -26,12 +26,12 @@ def getQuestions(userId, label):
 
     if label is not None:
         sql = """SELECT Q.id, Q.enonce, Q.enseignant, Q.type FROM Questions Q
-             JOIN liensEtiquettesQuestions lien ON liens.question = Q.id JOIN Etiquettes E ON E.id= liens.etiquette
+             JOIN liensEtiquettesQuestions liens ON liens.question = Q.id JOIN Etiquettes E ON E.id= liens.etiquette
              WHERE Q.enseignant = ? AND E.nom = ?"""
         parameters = (userId, label)
 
     else:
-        sql = "SELECT Q.id, Q.enonce, Q.enseignant, Q.type FROM Questions WHERE Q.enseignant = ?"
+        sql = "SELECT id, enonce, enseignant, type FROM Questions WHERE enseignant = ?"
         parameters = (userId, )
 
     res = cur.execute(sql, parameters)
