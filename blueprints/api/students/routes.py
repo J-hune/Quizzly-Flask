@@ -42,7 +42,8 @@ def insertStudents():
 
 # Route pour supprimer un étudiant
 @students.route('/removeStudent/<id>', methods=['GET'])
-def removeStudent(studentId):
+def removeStudent(id):
+
     # Si il est en session
     if 'user' in session:
 
@@ -52,7 +53,7 @@ def removeStudent(studentId):
             # Renvoie 0 si bon
             # 1 si mauvaise requete
             # 2 si l'étudiant n'est pas trouvé
-            remove = functions.students.removeStudent(studentId)
+            remove = functions.students.removeStudent(id)
 
             if remove == 0:
                 return jsonify(success=True), 200
