@@ -47,20 +47,21 @@ def addQuestion():
     # Je suis parti du principe que data est de cette forme
     # data = {
     #   "enonce": "Ceci est une question de test avec beaucoup de mots",
+    #   "type": 0,
+    #   "id": 5
     #   "etiquettes": [
     #     {
     #       "couleur": "000000",
     #       "nom": "algo"
     #     }
     #   ],
-    #   "id": 8,
     #   "reponses": [
     #     {
     #       "reponse": "",
-    #       "reponseJuste": false
+    #       "reponseType": 0,
+    #       "reponseJuste": False
     #     }
     #   ],
-    #   "user": 5
     # }
 
     # Vérification que l'utilisateur est en session
@@ -68,6 +69,7 @@ def addQuestion():
         data = request.get_json(force=True)
         user = session.get("user")
         if functionQuestions.addQuestions(
+                data["type"],
                 data["enonce"],
                 user["id"],
                 data["etiquettes"],
@@ -89,18 +91,18 @@ def addQuestion():
 # Route qui permet l'ajout de nouvelles réponses
 @questions.route('/addReponses', methods=['POST'])
 def addReponses():
-    # Je suis parti du principe que data est de cette forme {"question" : 2, "reponse" : "Non"}
+    # Je suis parti du principe que data est de cette forme {"type":1, "question" : 2, "reponse" : "Non", "reponseJuste" : 0}
     data = request.get_json(force=True)
 
     # Vérifie si on a nos données
-    if not (data["question"] and data["reponse"] and data["reponseJuste"]):
+    if not (data["type"] and data["question"] and data["reponse"] and data["reponseJuste"]):
         return jsonify({
             "status": 400,
             "reason": "First Name, Surname or Password Incomplete"
         }), 400
 
     # La fonction renvoie True si elle a ajouté dans la table et False sinon
-    if functionQuestions.addReponses(data["question"], data["reponse"], data["reponseJuste"]):
+    if functionQuestions.addReponses(data["type"], data["question"], data["reponse"], data["reponseJuste"]):
         return jsonify(success=True), 200
     else:
         return jsonify({
@@ -135,6 +137,7 @@ def editQuestion(id):
     # Je suis parti du principe que data est de cette forme
     # {
     #   "enonce": "Ceci est une question de test avec beaucoup de mots",
+    #   "type": 0
     #   "etiquettes": [
     #     {
     #       "couleur": "000000",
@@ -145,7 +148,8 @@ def editQuestion(id):
     #   "reponses": [
     #     {
     #       "reponse": "",
-    #       "reponseJuste": false
+    #       "reponseType": 0,
+    #       "reponseJuste": False
     #     }
     #   ],
     #   "user": 5
@@ -157,6 +161,7 @@ def editQuestion(id):
         user = session.get("user")
         if functionQuestions.editQuestion(id,
                                           data["enonce"],
+                                          data["type"],
                                           user["id"],
                                           data["etiquettes"],
                                           data["reponses"]
