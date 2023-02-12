@@ -9,7 +9,7 @@ def getEtu(studentId):
         cur = con.cursor()
 
         # Selection des données dans la table
-        cur.execute("""SELECT nom, prenom FROM Etudiants WHERE id = ?;""", (studentId, ))
+        cur.execute("SELECT nom, prenom FROM Etudiants WHERE id = ?;", (studentId,))
         res = cur.fetchall()
 
         # Fermeture de la connection
@@ -26,11 +26,13 @@ def getEtu(studentId):
 
 # ajoute les étudiants dans la base de donnée
 # Reçois des données sous cette forme :
-# [{"numEtudiant" : 1332214, "nom":"DeLaTour", "prenom":"Jean"},
-# {"numEtudiant" : 1322324, "nom":"DeLaTour", "prenom":"Jeanne"},
+# [{"id" : 1332214, "nom":"DeLaTour", "prenom":"Jean"},
+# {"id" : 1322324, "nom":"DeLaTour", "prenom":"Jeanne"},
 # ]
 def addStudent(ListeDeDictionnaire):
     nbStudentAdd = 0
+
+    # Pour chaque étudiant
     for i in range(len(ListeDeDictionnaire)):
         try:
             # Connection à la table
@@ -38,15 +40,16 @@ def addStudent(ListeDeDictionnaire):
             cur = con.cursor()
 
             # Insertion des données dans la table
-            sql = """INSERT or IGNORE INTO Etudiants
-                    (id, nom, prenom, mdp) 
-                    VALUES (?, ?, ?, ?);"""
-            data = (ListeDeDictionnaire[i]["numEtudiant"], ListeDeDictionnaire[i]["nom"], ListeDeDictionnaire[i]["prenom"],ListeDeDictionnaire[i]["numEtudiant"])
+            sql = "INSERT or IGNORE INTO Etudiants (id, nom, prenom, mdp) VALUES (?, ?, ?, ?);"
+            data = (ListeDeDictionnaire[i]["id"],
+                    ListeDeDictionnaire[i]["nom"],
+                    ListeDeDictionnaire[i]["prenom"],
+                    ListeDeDictionnaire[i]["id"])
             cur.execute(sql, data)
             con.commit()
 
-            # Si le dernier element inserer a le meme id que l'etudiant actuel on l'a réellement ajouté
-            if cur.lastrowid == ListeDeDictionnaire[i]["numEtudiant"]:
+            # Si le dernier element inséré, a le meme id que l'étudiant actuel on l'a réellement ajouté
+            if cur.lastrowid == int(ListeDeDictionnaire[i]["id"]):
                 nbStudentAdd += 1
 
             # Fermeture de la connection
@@ -65,7 +68,7 @@ def changePassword(NumEtudiant, password):
         cur = con.cursor()
 
         # Mise à jour des données dans la table
-        cur.execute("""UPDATE Etudiants SET mdp = ? WHERE id = ?;""", (password ,NumEtudiant))
+        cur.execute("UPDATE Etudiants SET mdp = ? WHERE id = ?;", (password, NumEtudiant))
         con.commit()
 
         # Fermeture de la connection
@@ -90,14 +93,14 @@ def removeStudent(studentId):
             cur = con.cursor()
 
             # Suppression des données dans la table
-            cur.execute("""DELETE FROM Etudiants WHERE id = ?;""", (studentId ,))
+            cur.execute("DELETE FROM Etudiants WHERE id = ?;", (studentId,))
             con.commit()
             # Fermeture de la connection
             cur.close()
             con.close()
             return 0
         except sqlite3.Error as error:
-            print("Échec de la supression de l'element dans la table sqlite", error)
+            print("Échec de la suppression de l'élément dans la table sqlite", error)
             return 1
     else:
         return 2
@@ -110,13 +113,13 @@ def removeAllStudent():
         cur = con.cursor()
 
         # Suppression de toutes les données dans la table
-        cur.execute("""DELETE FROM Etudiants;""")
+        cur.execute("DELETE FROM Etudiants;")
         con.commit()
-        print(cur.lastrowid)
+
         # Fermeture de la connection
         cur.close()
         con.close()
         return True
     except sqlite3.Error as error:
-        print("Échec de la supression de l'element dans la table sqlite", error)
+        print("Échec de la suppression de l'élément dans la table sqlite", error)
         return False
