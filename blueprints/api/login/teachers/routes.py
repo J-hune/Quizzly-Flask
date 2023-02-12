@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, request, session
 from functions.login import registerUser, teacherExists
 
-enseignants = Blueprint('enseignants', __name__, url_prefix='/enseignants')
+teachers = Blueprint('teachers', __name__, url_prefix='/teachers')
 
-@enseignants.route('/signup', methods=['POST'])
+@teachers.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json(force=True)
     firstname = data.get("firstname")
@@ -21,7 +21,7 @@ def signup():
         return jsonify(success=True), 200
 
 
-@enseignants.route('/signin', methods=['POST'])
+@teachers.route('/signin', methods=['POST'])
 def signin():
     data = request.get_json(force=True)
     firstname = data.get("firstname")
@@ -45,7 +45,7 @@ def signin():
             }), 401
 
 
-@enseignants.route('/logged', methods=['GET'])
+@teachers.route('/logged', methods=['GET'])
 def logged():
     print(session)
     if 'user' in session:

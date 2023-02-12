@@ -2,10 +2,10 @@ from flask import Blueprint, jsonify, request, session
 from functions.login import studentExists
 from functions.students import changePassword
 
-etudiants = Blueprint('etudiants', __name__, url_prefix='/etudiants')
+students = Blueprint('students', __name__, url_prefix='/students')
 
 
-@etudiants.route('/signin', methods=['POST'])
+@students.route('/signin', methods=['POST'])
 def signin():
     data = request.get_json(force=True)
     studentID = data.get("id")
@@ -28,7 +28,7 @@ def signin():
             }), 401
 
 
-@etudiants.route('/logged', methods=['GET'])
+@students.route('/logged', methods=['GET'])
 def logged():
     print(session)
     if 'user' in session:
@@ -40,7 +40,7 @@ def logged():
         }), 200
 
 
-@etudiants.route('/editPassword', methods=['POST'])
+@students.route('/editPassword', methods=['POST'])
 def editPassword():
     if 'user' in session:
         data = request.get_json(force=True)
