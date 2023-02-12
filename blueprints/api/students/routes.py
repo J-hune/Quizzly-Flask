@@ -9,18 +9,17 @@ students = Blueprint('student', __name__, url_prefix='/students')
 # Route pour insérer un étudiant
 @students.route('/insertStudents', methods=['POST'])
 def insertStudents():
-
     # Si il est en session
     if 'user' in session:
 
         # Si c'est un enseignant
-        if session["user"]["type"]=="Enseignant":
+        if session["user"]["type"] == "Enseignant":
             data = request.get_json(force=True)
 
             # Renvoie -1 si on n'a pas réussi à insérer un étudiant, ou sinon le nombre d'étudiants réellement insérer
             nbStudent = addStudent(data)
 
-            if nbStudent is not -1:
+            if nbStudent != -1:
                 return jsonify({"success": True, "result": nbStudent}), 200
             else:
                 return jsonify({
@@ -44,12 +43,11 @@ def insertStudents():
 # Route pour supprimer un étudiant
 @students.route('/removeStudent/<id>', methods=['GET'])
 def removeStudent(studentId):
-
     # Si il est en session
     if 'user' in session:
 
         # Si c'est un enseignant
-        if session["user"]["type"]=="Enseignant":
+        if session["user"]["type"] == "Enseignant":
 
             # Renvoie 0 si bon
             # 1 si mauvaise requete
@@ -89,7 +87,7 @@ def removeAllStudent():
     # Si il est en session
     if 'user' in session:
         # Si c'est un enseignant
-        if session["user"]["type"]=="Enseignant":
+        if session["user"]["type"] == "Enseignant":
 
             # Renvoie True si tout s'est bien passé
             if functions.students.removeAllStudent():
