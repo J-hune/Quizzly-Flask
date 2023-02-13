@@ -48,7 +48,8 @@ def addQuestion():
     # data = {
     #   "enonce": "Ceci est une question de test avec beaucoup de mots",
     #   "type": 0,
-    #   "id": 5
+    #   "id": 5,
+    #   "numerique" : 332,33
     #   "etiquettes": [
     #     {
     #       "couleur": "000000",
@@ -73,7 +74,8 @@ def addQuestion():
                 data["enonce"],
                 user["id"],
                 data["etiquettes"],
-                data["reponses"]
+                data["reponses"],
+                data["numerique"]
         ):
             return jsonify(success=True), 200
         else:
@@ -95,14 +97,14 @@ def addReponses():
     data = request.get_json(force=True)
 
     # Vérifie si on a nos données
-    if not (data["type"] and data["question"] and data["reponse"] and data["reponseJuste"]):
+    if not (data["question"] and data["reponse"] and data["reponseJuste"]):
         return jsonify({
             "status": 400,
             "reason": "First Name, Surname or Password Incomplete"
         }), 400
 
     # La fonction renvoie True si elle a ajouté dans la table et False sinon
-    if functionQuestions.addReponses(data["type"], data["question"], data["reponse"], data["reponseJuste"]):
+    if functionQuestions.addReponses(data["reponse"], data["reponseJuste"], data["question"]):
         return jsonify(success=True), 200
     else:
         return jsonify({
@@ -137,13 +139,14 @@ def editQuestion(id):
     # Je suis parti du principe que data est de cette forme
     # {
     #   "enonce": "Ceci est une question de test avec beaucoup de mots",
-    #   "type": 0
+    #   "type": 0,
     #   "etiquettes": [
     #     {
     #       "couleur": "000000",
     #       "nom": "algo"
     #     }
     #   ],
+    #   "numerique": 332, 33,
     #   "id": 8,
     #   "reponses": [
     #     {
@@ -164,7 +167,8 @@ def editQuestion(id):
                                           data["type"],
                                           user["id"],
                                           data["etiquettes"],
-                                          data["reponses"]
+                                          data["reponses"],
+                                          data["numerique"]
                                           ):
             return jsonify(success=True), 200
         else:

@@ -25,13 +25,13 @@ def getQuestions(userId, label):
     # et seulement celle qui ont une etiquette
 
     if label is not None:
-        sql = """SELECT Q.id, Q.enonce, Q.enseignant, Q.type FROM Questions Q
+        sql = """SELECT Q.id, Q.enonce, Q.enseignant, Q.type, Q.numerique FROM Questions Q
              JOIN liensEtiquettesQuestions liens ON liens.question = Q.id JOIN Etiquettes E ON E.id= liens.etiquette
              WHERE Q.enseignant = ? AND E.nom = ?"""
         parameters = (userId, label)
 
     else:
-        sql = "SELECT id, enonce, enseignant, type FROM Questions WHERE enseignant = ?"
+        sql = "SELECT id, enonce, enseignant, type, numerique FROM Questions WHERE enseignant = ?"
         parameters = (userId, )
 
     res = cur.execute(sql, parameters)
@@ -48,7 +48,9 @@ def getQuestions(userId, label):
             "enonce": res[i][1],
             "enseignant": res[i][2],
             "etiquettes": fonctionLabels.getLiensEtiquettes(res[i][0], userId),
-            "reponses": getReponses(res[i][0], res[i][3])
+            "reponses": getReponses(res[i][0]),
+            "type": res[i][3],
+            "numerique": res[i][4]
         }
         data.append(dico)
 
@@ -79,7 +81,7 @@ def getQuestion(userId, id):
 
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
     # et seulement celle qui ont une etiquette
-    sql = """SELECT Questions.id, Questions.enonce, Questions.enseignant, Questions.type FROM Questions 
+    sql = """SELECT Questions.id, Questions.enonce, Questions.enseignant, Questions.type, Questions.numerique FROM Questions 
              WHERE Questions.enseignant = ? AND id = ?"""
 
     res = cur.execute(sql, (userId, id))
@@ -96,7 +98,8 @@ def getQuestion(userId, id):
         "enonce": res[1],
         "enseignant": res[2],
         "etiquettes": fonctionLabels.getLiensEtiquettes(res[0], userId),
-        "reponses": getReponses(res[0], res[3])
+        "reponses": getReponses(res[0]),
+        "numerique": res[4]
     }
 
     # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
@@ -111,7 +114,7 @@ def getQuestion(userId, id):
 
 # fonction qui permet l'ajout d'une question (ses reponses, et ses etiquettes)
 # faite par un enseignant dans la table des questions
-def addQuestions(questionType, enonce, enseignant, etiquettes, reponses):
+def addQuestions(questionType, enonce, enseignant, etiquettes, reponses, numerique):
 
     if len(reponses)==0 or len(reponses[0])==0:
         return False
@@ -121,8 +124,8 @@ def addQuestions(questionType, enonce, enseignant, etiquettes, reponses):
         cur = con.cursor()
 
         # Insertion de la nouvelle question dans la table des questions
-        sql = "INSERT INTO Questions (type, enonce, enseignant) VALUES (?, ?, ?);"
-        data = (questionType, enonce, enseignant)
+        sql = "INSERT INTO Questions (type, enonce, enseignant, numerique) VALUES (?, ?, ?, ?);"
+        data = (questionType, enonce, enseignant, numerique)
         cur.execute(sql, data)
         con.commit()
 
@@ -145,7 +148,7 @@ def addQuestions(questionType, enonce, enseignant, etiquettes, reponses):
                     reponseJuste = 1
                 else:
                     reponseJuste = 0
-                addReponses(reponses[i]["reponseType"], reponses[i]["reponse"], reponseJuste, questionsId)
+                addReponses(reponses[i]["reponse"], reponseJuste, questionsId)
 
         return True
     except sqlite3.Error as error:
@@ -155,13 +158,13 @@ def addQuestions(questionType, enonce, enseignant, etiquettes, reponses):
 
 # fonction qui renvoie un tableau de dico qui contient les réponses :
 # [{"id": 1, "reponse": "Dounnouvahannne", "reponseJuste": 1, "question": 1},...]
-def getReponses(questionId, questionType):
+def getReponses(questionId):
     # Connection à la table
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
     # Requêtes pour récupérer toutes les réponses associées à la question grâce à l'id de celle-ci
-    res = cur.execute("SELECT * FROM Reponses WHERE question=? AND type=?", (questionId, questionType))
+    res = cur.execute("SELECT * FROM Reponses WHERE question=?", (questionId, ))
     res = res.fetchall()
 
     # On les range dans un dictionnaire pour que ce soit plus simple d'utilisation
@@ -182,15 +185,15 @@ def getReponses(questionId, questionType):
 
 
 # fonction qui permet l'ajout d'une réponse associée à une question, dans la table reponses de la BDD
-def addReponses(reponseType, reponse, reponseJuste, question):
+def addReponses(reponse, reponseJuste, question):
     try:
         # Connection à la table
         con = sqlite3.connect('database.db')
         cur = con.cursor()
 
         # insertion des données dans la table des reponses
-        sql = "INSERT INTO Reponses (type, reponse, reponseJuste, question) VALUES (?, ?, ?, ?)"
-        data = (reponseType, reponse, reponseJuste, question)
+        sql = "INSERT INTO Reponses (reponse, reponseJuste, question) VALUES (?, ?, ?, ?)"
+        data = (reponse, reponseJuste, question)
         cur.execute(sql, data)
         con.commit()
 
@@ -233,9 +236,9 @@ def deleteQuestion(id, userId):
 
 # Edit une question, c'est-à-dire supprime la question et la remet dans la base de données
 # ATTENTION à l'id qui change
-def editQuestion(id, questionType, enonce, enseignant, etiquettes, reponses):
+def editQuestion(id, questionType, enonce, enseignant, etiquettes, reponses, numerique):
     # Verifie si l'id correspond à une question faite par l'enseignant
     if not deleteQuestion(id, enseignant):
         return False
 
-    return addQuestions(questionType, enonce, enseignant, etiquettes, reponses)
+    return addQuestions(questionType, enonce, enseignant, etiquettes, reponses, numerique)
