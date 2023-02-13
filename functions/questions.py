@@ -16,7 +16,6 @@ import functions.fonctionLabels as fonctionLabels
 # #   }
 # ]
 def getQuestions(userId, label):
-
     # Connection à la table
     con = sqlite3.connect('database.db')
     cur = con.cursor()
@@ -32,11 +31,10 @@ def getQuestions(userId, label):
 
     else:
         sql = "SELECT id, enonce, enseignant, type, numerique FROM Questions WHERE enseignant = ?"
-        parameters = (userId, )
+        parameters = (userId,)
 
     res = cur.execute(sql, parameters)
     res = res.fetchall()
-
 
     # Ranger les données sous forme de tableau de dictionnaire
     data = []
@@ -115,8 +113,7 @@ def getQuestion(userId, id):
 # fonction qui permet l'ajout d'une question (ses reponses, et ses etiquettes)
 # faite par un enseignant dans la table des questions
 def addQuestions(questionType, enonce, enseignant, etiquettes, reponses, numerique):
-
-    if len(reponses)==0 or len(reponses[0])==0:
+    if len(reponses) == 0 or len(reponses[0]) == 0:
         return False
     try:
         # Connection à la table
@@ -144,7 +141,7 @@ def addQuestions(questionType, enonce, enseignant, etiquettes, reponses, numeriq
         # On ajoute toutes les réponses associées à la question
         for i in range(0, len(reponses)):
             if len(reponses[i]["reponse"]) != 0:
-                if(reponses[i]["reponseJuste"]):
+                if (reponses[i]["reponseJuste"]):
                     reponseJuste = 1
                 else:
                     reponseJuste = 0
@@ -164,7 +161,7 @@ def getReponses(questionId):
     cur = con.cursor()
 
     # Requêtes pour récupérer toutes les réponses associées à la question grâce à l'id de celle-ci
-    res = cur.execute("SELECT * FROM Reponses WHERE question=?", (questionId, ))
+    res = cur.execute("SELECT * FROM Reponses WHERE question=?", (questionId,))
     res = res.fetchall()
 
     # On les range dans un dictionnaire pour que ce soit plus simple d'utilisation
@@ -172,9 +169,9 @@ def getReponses(questionId):
     for i in range(0, len(res)):
         dico = {
             "id": res[i][0],
-            "reponse": res[i][2],
-            "reponseJuste": bool(res[i][3]),
-            "question": res[i][4],
+            "reponse": res[i][1],
+            "reponseJuste": bool(res[i][2]),
+            "question": res[i][3]
         }
         data.append(dico)
 
@@ -192,7 +189,7 @@ def addReponses(reponse, reponseJuste, question):
         cur = con.cursor()
 
         # insertion des données dans la table des reponses
-        sql = "INSERT INTO Reponses (reponse, reponseJuste, question) VALUES (?, ?, ?, ?)"
+        sql = "INSERT INTO Reponses (reponse, reponseJuste, question) VALUES (?, ?, ?)"
         data = (reponse, reponseJuste, question)
         cur.execute(sql, data)
         con.commit()
@@ -241,4 +238,4 @@ def editQuestion(id, questionType, enonce, enseignant, etiquettes, reponses, num
     if not deleteQuestion(id, enseignant):
         return False
 
-    return addQuestions(questionType, enonce, enseignant, etiquettes, reponses, numerique)
+    return addQuestions(enonce, questionType, enseignant, etiquettes, reponses, numerique)
