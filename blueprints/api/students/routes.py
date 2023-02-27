@@ -85,7 +85,7 @@ def removeStudent(id):
 # Route pour supprimer tous les étudiants
 @students.route('/removeAllStudent/', methods=['GET'])
 def removeAllStudent():
-    # Si il est en session
+    # S'il est en session
     if 'user' in session:
         # Si c'est un enseignant
         if session["user"]["type"] == "Enseignant":
@@ -110,4 +110,56 @@ def removeAllStudent():
         return jsonify({
             "status": 400,
             "reason": "Session non disponible"
+        }), 400
+
+
+@students.route('/getAllStudents', methods=['GET'])
+def getAllStudents():
+    # S'il est en session
+    if 'user' in session:
+        # Si c'est un enseignant
+        if session["user"]["type"] == "Enseignant":
+            etudiants = functions.students.getStudents()
+            return jsonify(etudiants)
+        # Ce n'est pas un enseignant
+        else:
+            return jsonify({
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
+    # S'il n'est pas en session
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Ajout des données impossible"
+        }), 400
+
+@students.route('/editAvatar', methods=['POST'])
+def editAvatar():
+    # S'il est en session
+    if 'user' in session:
+        # Si c'est un étudiant
+        if session["user"]["type"] == "Etudiant":
+            user = session.get("user")
+            data = request.get_json(force=True)
+            # Renvoie True si tout s'est bien passé
+            if functions.students.editAvatar(user["id"], data["avatar"]):
+                return jsonify(success=True), 200
+            else:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Edit d'avatar impossible"
+                }), 400
+
+        # Ce n'est pas un enseignant
+        else:
+            return jsonify({
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
+    # Sinon pas en session
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Ajout des données impossible"
         }), 400

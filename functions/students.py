@@ -61,6 +61,40 @@ def addStudent(ListeDeDictionnaire):
     return nbStudentAdd
 
 
+# Retourne tous les étudiants de la BDD sous cette forme :
+# [
+#   {
+#      "id": 42,
+#      "nom": "Smith",
+#      "prenom": "John",
+#      "avatar": "data:image/png;base64,iVBORw0KGgo..."
+#    }, ...
+# ]
+def getStudents():
+    # Connection à la table
+    con = sqlite3.connect('database.db')
+    cur = con.cursor()
+
+    cur.execute("SELECT Etudiants.id, Etudiants.nom, Etudiants.prenom, Etudiants.avatar FROM Etudiants")
+    res = cur.fetchall()
+
+    data = []
+    for i in range(len(res)):
+        dico = {
+            "id": res[i][0],
+            "nom": res[i][1],
+            "prenom": res[i][2],
+            "avatar": res[i][3]
+        }
+        data.append(dico)
+
+    # Fermeture de la connection
+    cur.close()
+    con.close()
+
+    return data
+
+
 def changePassword(NumEtudiant, password):
     try:
         # Connection à la table
@@ -75,6 +109,27 @@ def changePassword(NumEtudiant, password):
         cur.close()
         con.close()
         return True
+    except sqlite3.Error as error:
+        print("Échec de l'insertion de la variable Python dans la table sqlite", error)
+        return False
+
+
+# Modifie l'avatar d'un étudiant
+def editAvatar(NumEtudiant, avatar):
+    try:
+        # Connection à la table
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+
+        # Mise à jour de la donnée dans la table
+        cur.execute("UPDATE Etudiants SET avatar = ? WHERE id = ?;", (avatar, NumEtudiant))
+        con.commit()
+
+        # Fermeture de la connection
+        cur.close()
+        con.close()
+        return True
+
     except sqlite3.Error as error:
         print("Échec de l'insertion de la variable Python dans la table sqlite", error)
         return False
