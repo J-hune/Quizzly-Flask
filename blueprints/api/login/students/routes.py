@@ -18,9 +18,14 @@ def signin():
             "reason": "ID or Password Invalid"
         }), 401
     else:
+        student = studentExists(studentID, password)
+
         # Si l'étudiant existe en base de donnée
-        if studentExists(studentID, password):
-            return jsonify(success=True), 200
+        if student:
+            return jsonify({
+                "success": True,
+                "user": student
+            }), 200
         else:
             return jsonify({
                 "status": 401,

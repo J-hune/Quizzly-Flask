@@ -33,7 +33,7 @@ def registerUser(firstname, surname, password, userType):
     connection.close()
 
 
-# Vérifie si l'enseignant existe et retourne un booleen selon le cas
+# Vérifie si l'enseignant existe et retourne un objet ou un booleen selon le cas
 # Si oui, l'enseignant est ajouté en session
 def teacherExists(firstname, surname, password):
     firstname = firstname.strip()
@@ -60,14 +60,14 @@ def teacherExists(firstname, surname, password):
                 'type': "Enseignant"
             }
             session.permanent = True
-            return True
+            return session["user"]
     connection.commit()
 
     connection.close()
     return False
 
 
-# Vérifie si l'enseignant existe et retourne un booleen selon le cas
+# Vérifie si l'enseignant existe et retourne un objet ou un booleen selon le cas
 # Si oui, l'enseignant est ajouté en session
 def studentExists(studentID, password):
     studentID = studentID
@@ -93,7 +93,7 @@ def studentExists(studentID, password):
                 'type': "Etudiant"
             }
             session.permanent = True
-            return True
+            return session["user"]
     connection.commit()
 
     connection.close()

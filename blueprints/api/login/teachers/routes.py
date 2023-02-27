@@ -3,6 +3,7 @@ from functions.login import registerUser, teacherExists
 
 teachers = Blueprint('teachers', __name__, url_prefix='/teachers')
 
+
 @teachers.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json(force=True)
@@ -35,9 +36,14 @@ def signin():
             "reason": "First Name, Surname or Password Invalid"
         }), 401
     else:
+        teacher = teacherExists(firstname, surname, password)
+
         # Si l'enseignant existe en base de donnée
-        if teacherExists(firstname, surname, password):
-            return jsonify(success=True), 200
+        if teacher:
+            return jsonify({
+                "success": True,
+                "user": teacher
+            }), 200
         else:
             return jsonify({
                 "status": 401,
