@@ -26,7 +26,7 @@ def registerUser(firstname, surname, password, userType):
         'id': cursor.lastrowid,
         'firstname': firstname,
         'surname': surname,
-        'type': userType
+        'type': "Enseignant" if userType == "Enseignants" else "Etudiant"
     }
     session.permanent = True
 
