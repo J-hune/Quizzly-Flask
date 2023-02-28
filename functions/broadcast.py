@@ -30,6 +30,7 @@ def generateCode():
         # Fermeture de la connection
         cursor.close()
         conn.close()
+        return code
 
     except sqlite3.Error as error:
         print("Échec de l'insertion de l'élément dans la table sqlite", error)
