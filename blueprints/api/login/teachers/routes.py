@@ -18,7 +18,7 @@ def signup():
             "reason": "First Name, Surname or Password Invalid"
         }), 401
     else:
-        registerUser(firstname, surname, password, "Enseignant")
+        registerUser(firstname, surname, password, "Enseignants")
         return jsonify(success=True), 200
 
 
