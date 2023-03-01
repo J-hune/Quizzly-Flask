@@ -143,6 +143,25 @@ def editAvatar(NumEtudiant, avatar):
         return False
 
 
+def getAvatar(NumEtudiant):
+    try:
+        # Connection à la table
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+
+        # Mise à jour de la donnée dans la table
+        cur.execute("SELECT avatar FROM Etudiants WHERE id = ?;", (NumEtudiant, ))
+        con.commit()
+
+        # Fermeture de la connection
+        cur.close()
+        con.close()
+        return True
+
+    except sqlite3.Error as error:
+        print("Échec de l'insertion de la variable Python dans la table sqlite", error)
+        return False
+
 # removeStudent renvoie :
 #  0 si bon
 #  1 si mauvaise requete

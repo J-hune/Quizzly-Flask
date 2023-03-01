@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 from functions.login import studentExists
-from functions.students import changePassword
+from functions.students import changePassword, getAvatar
 
 students = Blueprint('students', __name__, url_prefix='/students')
 
@@ -37,7 +37,7 @@ def signin():
 def logged():
     print(session)
     if 'user' in session:
-        return jsonify(session["user"])
+        return jsonify(session["user"], getAvatar(session["user"]["id"]))
     else:
         return jsonify({
             "status": 200,
