@@ -49,7 +49,7 @@ def logged():
 def editPassword():
     if 'user' in session:
         data = request.get_json(force=True)
-        if changePassword(data):
+        if changePassword(session["user"]["id"], data["password"]):
             return jsonify(success=True), 200
         else:
             return jsonify({

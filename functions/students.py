@@ -1,5 +1,7 @@
 import sqlite3
 
+from werkzeug.security import generate_password_hash
+
 
 # teste si l'étudiant existe dans la base de donnée
 def getEtu(studentId):
@@ -97,12 +99,15 @@ def getStudents():
 
 def changePassword(NumEtudiant, password):
     try:
+        # On chiffre le mot de passe
+        hashedPassword = generate_password_hash(password, 'sha256')
+
         # Connection à la table
         con = sqlite3.connect('database.db')
         cur = con.cursor()
 
         # Mise à jour des données dans la table
-        cur.execute("UPDATE Etudiants SET mdp = ? WHERE id = ?;", (password, NumEtudiant))
+        cur.execute("UPDATE Etudiants SET mdp = ? WHERE id = ?;", (hashedPassword, NumEtudiant))
         con.commit()
 
         # Fermeture de la connection
