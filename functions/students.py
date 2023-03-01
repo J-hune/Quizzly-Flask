@@ -150,16 +150,18 @@ def getAvatar(NumEtudiant):
         cur = con.cursor()
 
         # Mise à jour de la donnée dans la table
-        cur.execute("SELECT avatar FROM Etudiants WHERE id = ?;", (NumEtudiant, ))
+        result = cur.execute("SELECT avatar FROM Etudiants WHERE id = ?;", (NumEtudiant, ))
+        result = result.fetchone()
         con.commit()
 
         # Fermeture de la connection
         cur.close()
         con.close()
-        return True
-
+        if result:
+            return result[0]
+        return False
     except sqlite3.Error as error:
-        print("Échec de l'insertion de la variable Python dans la table sqlite", error)
+        print("Échec de la selection de la variable Python dans la table sqlite : ", error)
         return False
 
 # removeStudent renvoie :
