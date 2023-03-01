@@ -41,12 +41,15 @@ def addStudent(ListeDeDictionnaire):
             con = sqlite3.connect('database.db')
             cur = con.cursor()
 
+            # On chiffre le mot de passe
+            hashedPassword = generate_password_hash(ListeDeDictionnaire[i]["id"], 'sha256')
+
             # Insertion des données dans la table
             sql = "INSERT or IGNORE INTO Etudiants (id, nom, prenom, mdp) VALUES (?, ?, ?, ?);"
             data = (ListeDeDictionnaire[i]["id"],
                     ListeDeDictionnaire[i]["nom"],
                     ListeDeDictionnaire[i]["prenom"],
-                    ListeDeDictionnaire[i]["id"])
+                    hashedPassword)
             cur.execute(sql, data)
             con.commit()
 
