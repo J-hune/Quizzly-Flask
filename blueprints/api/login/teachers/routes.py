@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 from functions.login import registerUser, teacherExists
 
 teachers = Blueprint('teachers', __name__, url_prefix='/teachers')
@@ -49,15 +49,3 @@ def signin():
                 "status": 401,
                 "reason": "First Name, Surname or Password Invalid"
             }), 401
-
-
-@teachers.route('/logged', methods=['GET'])
-def logged():
-    print(session)
-    if 'user' in session:
-        return jsonify(session["user"])
-    else:
-        return jsonify({
-            "status": 200,
-            "reason": "not Logged"
-        }), 200

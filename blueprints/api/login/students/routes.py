@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 from functions.login import studentExists
-from functions.students import changePassword, getAvatar
+from functions.students import changePassword
 
 students = Blueprint('students', __name__, url_prefix='/students')
 
@@ -31,18 +31,6 @@ def signin():
                 "status": 401,
                 "reason": "First Name, Surname or Password Invalid"
             }), 401
-
-
-@students.route('/logged', methods=['GET'])
-def logged():
-    print(session)
-    if 'user' in session:
-        return jsonify({**session["user"], "avatar": getAvatar(session["user"]["id"])})
-    else:
-        return jsonify({
-            "status": 200,
-            "reason": "not Logged"
-        }), 200
 
 
 @students.route('/editPassword', methods=['POST'])
