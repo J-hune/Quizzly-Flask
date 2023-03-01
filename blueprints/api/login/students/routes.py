@@ -37,7 +37,7 @@ def signin():
 def logged():
     print(session)
     if 'user' in session:
-        return jsonify(session["user"], getAvatar(session["user"]["id"]))
+        return jsonify({**session["user"], "avatar": getAvatar(session["user"]["id"])})
     else:
         return jsonify({
             "status": 200,
