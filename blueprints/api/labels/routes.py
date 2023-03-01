@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, session
 import functions.fonctionLabels as fonctionLabels
-import app
 
 label = Blueprint('labels', __name__, url_prefix='/labels')
 

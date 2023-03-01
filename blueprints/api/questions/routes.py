@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify, session
-import app
 import functions.questions as functionQuestions
 
 questions = Blueprint('questions', __name__, url_prefix='/questions')

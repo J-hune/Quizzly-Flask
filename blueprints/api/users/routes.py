@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-import app
 import functions.users as functionUsers
 
 users = Blueprint('users', __name__, url_prefix='/users')

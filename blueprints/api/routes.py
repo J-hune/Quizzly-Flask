@@ -1,5 +1,4 @@
 from flask import Blueprint, session
-import app
 
 from blueprints.api.students.routes import students
 from blueprints.api.labels.routes import label
