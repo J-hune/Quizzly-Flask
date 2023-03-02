@@ -40,7 +40,7 @@ def addSequence():
 
 
 # Route pour modifier une Séquence
-@sequences.route('/editSequence/<id>', methods=['GET', 'POST'])
+@sequences.route('/editSequence/<id>', methods=['POST'])
 def editSequence(id):
 
     # Si il est en session
