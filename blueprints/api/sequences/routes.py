@@ -49,11 +49,13 @@ def editSequence(id):
         if session["user"]["type"] == "Enseignant":
             if session["user"]["id"] == functionSequences.getEnseignant(id):
                 data = request.get_json(force=True)
+                titre = data['titre']
                 questions = data['questions']
+
                 # Renvoie 0 si bon
                 # 1 si mauvaise request
                 # 2 si la sequence n'est pas trouvé
-                edit = functionSequences.editSequence(id, questions)
+                edit = functionSequences.editSequence(id, titre, questions)
                 if edit == 0:
                     return jsonify(success=True), 200
                 elif edit == 2:

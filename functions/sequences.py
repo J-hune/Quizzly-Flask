@@ -56,13 +56,16 @@ def addSequence(enseignantId, titreSequence, TabIdQuestions):
         return False
 
 
-def editSequence(SequenceId, TabIdQuestions):
+def editSequence(SequenceId, titre, TabIdQuestions):
     # Si la sequence existe
     if getEnseignant(SequenceId):
         try:
             # Connection à la table
             con = sqlite3.connect('database.db')
             cur = con.cursor()
+
+            # Modification du titre de la séquence
+            cur.execute("UPDATE Sequences SET titre = ? WHERE id = ?", (titre, SequenceId))
 
             # Suppression des données dans la table
             cur.execute("DELETE FROM liensSequencesQuestions WHERE idSequence = ?;", (SequenceId,))
