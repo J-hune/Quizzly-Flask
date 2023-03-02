@@ -14,8 +14,11 @@ def addSequence():
         # Si c'est un enseignant
         if session["user"]["type"] == "Enseignant":
             data = request.get_json(force=True)
+
+            titre = data['titre']
             questions = data['questions']
-            if functionSequences.addSequence(session["user"]["id"], questions):
+
+            if functionSequences.addSequence(session["user"]["id"], titre, questions):
                 return jsonify({"success": True}), 200
             else:
                 return jsonify({

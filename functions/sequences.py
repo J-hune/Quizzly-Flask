@@ -1,5 +1,7 @@
 import sqlite3
 
+from functions.broadcast import generateCode
+
 
 def getEnseignant(idSequence):
     try:
@@ -22,23 +24,27 @@ def getEnseignant(idSequence):
         return False
 
 
-def addSequence(enseignantId, TabIdQuestions):
+def addSequence(enseignantId, titreSequence, TabIdQuestions):
     try:
         # Connection à la table
         con = sqlite3.connect('database.db')
         cur = con.cursor()
 
+        # Génération de l'id de la séquence
+        code = generateCode()
+
         # insertion des données dans la table
-        cur.execute("INSERT INTO Sequences (enseignant) VALUES (?);", (enseignantId, ))
+        cur.execute("INSERT INTO Sequences (id, titre, enseignant) VALUES (?, ?, ?);",
+                    (code, titreSequence, enseignantId,))
 
         # Récupère la clé primaire de cette sequence
-        SequencesId=cur.lastrowid
+        SequencesId = cur.lastrowid
 
         # Pour chaque question
         for i in range(len(TabIdQuestions)):
-
             # insertion des données dans la table
-            cur.execute("INSERT or IGNORE INTO liensSequencesQuestions (idSequence, idQuestion) VALUES (?,?);", (SequencesId, TabIdQuestions[i]))
+            cur.execute("INSERT or IGNORE INTO liensSequencesQuestions (idSequence, idQuestion) VALUES (?,?);",
+                        (SequencesId, TabIdQuestions[i]))
             con.commit()
 
         # Fermeture de la connection
@@ -51,7 +57,6 @@ def addSequence(enseignantId, TabIdQuestions):
 
 
 def editSequence(SequenceId, TabIdQuestions):
-
     # Si la sequence existe
     if getEnseignant(SequenceId):
         try:
@@ -85,7 +90,6 @@ def editSequence(SequenceId, TabIdQuestions):
 
 
 def removeSequence(SequenceId):
-
     # Si la sequence existe
     if getEnseignant(SequenceId):
         try:
