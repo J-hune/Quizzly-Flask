@@ -36,7 +36,7 @@ def addSequence():
         }), 400
 
 
-# Route pour supprimer un étudiant
+# Route pour modifier une Séquence
 @sequences.route('/editSequence/<id>', methods=['GET', 'POST'])
 def editSequence(id):
 
@@ -83,6 +83,7 @@ def editSequence(id):
         }), 400
 
 
+# Route pour supprimer une Séquence
 @sequences.route('/removeSequence/<id>', methods=['GET'])
 def removeSequence(id):
     # Si il est en session
