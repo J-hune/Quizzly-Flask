@@ -37,14 +37,11 @@ def addSequence(enseignantId, titreSequence, TabIdQuestions):
         cur.execute("INSERT INTO Sequences (id, titre, enseignant) VALUES (?, ?, ?);",
                     (code, titreSequence, enseignantId,))
 
-        # Récupère la clé primaire de cette sequence
-        SequencesId = cur.lastrowid
-
         # Pour chaque question
         for i in range(len(TabIdQuestions)):
             # insertion des données dans la table
             cur.execute("INSERT or IGNORE INTO liensSequencesQuestions (idSequence, idQuestion) VALUES (?,?);",
-                        (SequencesId, TabIdQuestions[i]))
+                        (code, TabIdQuestions[i]))
             con.commit()
 
         # Fermeture de la connection
