@@ -1,6 +1,7 @@
 import sqlite3
 
 from functions.broadcast import generateCode
+from functions.fonctionLabels import getLiensEtiquettes
 
 
 def getEnseignant(sequenceId):
@@ -115,3 +116,84 @@ def removeSequence(sequenceId):
     # 0 si réussite
     # 1 si échec de la requête
     # 2 si la sequence n'est pas trouvée
+
+
+def getSequence(sequenceId):
+    # Si la séquence existe
+    try:
+        # Connection à la table
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        result = {}
+        # Suppression des données dans la table (update on cascade supprime les liens)
+        resultRequetes = cur.execute("""SELECT id, titre, idQuestion FROM Sequences
+                            JOIN liensSequencesQuestions ON Sequences.id=liensSequencesQuestions.idSequence
+                             WHERE id=?""", (sequenceId, ))
+
+        resultRequetes =resultRequetes.fetchall()
+        con.commit()
+        # Fermeture de la connection
+        cur.close()
+        con.close()
+
+        if resultRequetes:
+            # On récupère l'id
+            result["id"] = resultRequetes[0][0]
+            # On récupère que le titre
+            result["titre"] = resultRequetes[0][1]
+            # On crée un tableau pour les questions
+            result["questions"] = []
+            for i in range(len(resultRequetes)):
+                # On ajoute les id de chaque question
+                result["questions"].append(resultRequetes[i][2])
+            return result
+        else :
+            return False
+    except sqlite3.Error as error:
+        print("Échec de la selection de l'élément dans la table sqlite", error)
+        return False
+
+
+def getAllSequences(idEnseignant):
+    # Si la séquence existe
+    try:
+        # Connection à la table
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        result = {}
+        # Suppression des données dans la table (update on cascade supprime les liens)
+        resultRequetes = cur.execute("""SELECT id, titre, idQuestion FROM Sequences
+                                JOIN liensSequencesQuestions ON Sequences.id=liensSequencesQuestions.idSequence
+                                 WHERE enseignant=?""", (idEnseignant,))
+
+        resultRequetes = resultRequetes.fetchall()
+
+        listeEtiquettes = []
+        listeEtiquettesNomAjouté = []
+        con.commit()
+        # Fermeture de la connection
+        cur.close()
+        con.close()
+
+        if resultRequetes:
+            # On récupère l'id
+            result["id"] = resultRequetes[0][0]
+            # On récupère que le titre
+            result["titre"] = resultRequetes[0][1]
+            # On crée un tableau pour les questions
+            result["questions"] = []
+            for i in range(len(resultRequetes)):
+                # On ajoute les id de chaque question
+                result["questions"].append(resultRequetes[i][2])
+                listeEtiquettesQuestions = getLiensEtiquettes(resultRequetes[i][2], idEnseignant)
+                for j in range(len(listeEtiquettesQuestions)):
+                    if not (listeEtiquettesQuestions[j]["nom"] in listeEtiquettesNomAjouté):
+                        listeEtiquettesNomAjouté.append(listeEtiquettesQuestions[j]["nom"])
+                        listeEtiquettes.append(listeEtiquettesQuestions[j])
+            result["listeEtiquettes"] = listeEtiquettes
+            return result
+        else:
+            return False
+    except sqlite3.Error as error:
+        print("Échec de la selection de l'élément dans la table sqlite", error)
+        return False
