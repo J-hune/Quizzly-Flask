@@ -84,9 +84,10 @@ def editSequence(SequenceId, titre, TabIdQuestions):
             return 1
     else:
         return 2
-    #  0 si bon
-    #  1 si mauvaise request
-    #  2 si la sequence n'est pas trouvé
+
+    # 0 si réussite
+    # 1 si échec de la requête
+    # 2 si la sequence n'est pas trouvée
 
 
 def removeSequence(SequenceId):
@@ -112,6 +113,7 @@ def removeSequence(SequenceId):
             return 1
     else:
         return 2
-    #  0 si bon
-    #  1 si mauvaise request
-    #  2 si la sequence n'est pas trouvé
+
+    # 0 si réussite
+    # 1 si échec de la requête
+    # 2 si la sequence n'est pas trouvée
