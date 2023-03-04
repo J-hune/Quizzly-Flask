@@ -72,7 +72,6 @@ def teacherExists(firstname, surname, password):
 def studentExists(studentID, password):
     studentID = studentID
     password = password
-    print(studentID)
 
     connection = sqlite3.connect('database.db')
     cursor = connection.cursor()
