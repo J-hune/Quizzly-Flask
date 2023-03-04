@@ -168,7 +168,7 @@ def getSequence(id):
         }), 400
 
 
-@sequences.route("/getAllSequences", methods=["POST"])
+@sequences.route("/getAllSequences", methods=["GET"])
 def getAllSequences():
     # Si il est en session
     if 'user' in session:
