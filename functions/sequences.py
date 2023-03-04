@@ -130,7 +130,7 @@ def getSequence(sequenceId):
                             JOIN liensSequencesQuestions ON Sequences.id=liensSequencesQuestions.idSequence
                              WHERE id=?""", (sequenceId, ))
 
-        resultRequetes =resultRequetes.fetchall()
+        resultRequetes = resultRequetes.fetchall()
         con.commit()
         # Fermeture de la connection
         cur.close()
@@ -147,7 +147,7 @@ def getSequence(sequenceId):
                 # On ajoute les id de chaque question
                 result["questions"].append(resultRequetes[i][2])
             return result
-        else :
+        else:
             return False
     except sqlite3.Error as error:
         print("Échec de la selection de l'élément dans la table sqlite", error)
@@ -165,9 +165,6 @@ def getAllSequences(idEnseignant):
         resultRequetes = cur.execute("""SELECT id, titre FROM Sequences WHERE enseignant=?""", (idEnseignant,))
 
         resultRequetes = resultRequetes.fetchall()
-        print("resultRequetes : ", resultRequetes)
-
-
 
         if resultRequetes:
             result = []
