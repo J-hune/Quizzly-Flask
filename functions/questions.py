@@ -1,195 +1,327 @@
 import sqlite3
-
 import functions.fonctionLabels as fonctionLabels
 
 
-# fonction qui permet de récupérer les questions et les réponses créées par un enseignant
-# sous cette forme :
-# [
-#   {
-# #     "id": 1,
-# #     "type": 0,
-# #     "enonce": "Qui a calculé la circonférence de la terre en -200 av JC ?",
-# #     "enseignant": 1
-# #     "etiquettes": [{"couleur": "#000000", "nom": "histoire"},...],
-# #     "reponses": [{"id": 1, "question": 1, "reponse": "Ératosthène", "reponseJuste": 1},...],
-# #   }
-# ]
-def getQuestions(userId, label):
-    # Connection à la table
-    con = sqlite3.connect('database.db')
-    cur = con.cursor()
+# Récupère toutes les questions associées aux étiquettes (et leurs réponses) créées par un enseignant
+# Params : - userId : l'id de l'enseignant
+#          - label : un tableau d'étiquettes (string)
+# Return : tableau de dico sous cette forme
+#           [
+#             {
+#               "id": 1,
+#               "type": 0,
+#               "enonce": "Combien vaut pi ?",
+#               "etiquettes": [{"couleur": "#000000", "nom": "histoire"},...],
+#               "numerique": "3.14",
+#               "reponses": [{"id": 1, "question": 1, "reponse": "Trois quatorze", "reponseJuste": 1},...],
+#             }, ...
+#           ]
+def getQuestions(enseignant, etiquettes):
+    try :
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
-    # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
-    # et seulement celle qui ont une etiquette
+        # Si aucune étiquette n'est précisée, on récupère toutes les questions de l'enseignant
+        if etiquettes is None:
+            sql = "SELECT id, enonce, enseignant, type, numerique FROM Questions WHERE enseignant = ?;"
+            parameters = (enseignant,)
+        # Sinon, on récupère les questions de l'enseignant selon les étiquettes choisies
+        else:
+            sql = "SELECT Q.id, Q.enonce, Q.type, Q.numerique \
+                            FROM Questions Q \
+                            JOIN liensEtiquettesQuestions liens ON liens.question = Q.id \
+                            JOIN Etiquettes E ON E.id= liens.etiquette \
+                            WHERE Q.enseignant = ? AND E.nom = ?;" ###PROBLEME SI DEUX MEME NOMS
+            parameters = (enseignant, etiquettes)
 
-    if label is not None:
-        sql = """SELECT Q.id, Q.enonce, Q.enseignant, Q.type, Q.numerique FROM Questions Q
-             JOIN liensEtiquettesQuestions liens ON liens.question = Q.id JOIN Etiquettes E ON E.id= liens.etiquette
-             WHERE Q.enseignant = ? AND E.nom = ?"""
-        parameters = (userId, label)
+        result = cursor.execute(sql, parameters)
+        result = result.fetchall()
 
-    else:
-        sql = "SELECT id, enonce, enseignant, type, numerique FROM Questions WHERE enseignant = ?"
-        parameters = (userId,)
-
-    res = cur.execute(sql, parameters)
-    res = res.fetchall()
-
-    # Ranger les données sous forme de tableau de dictionnaire
-    data = []
-    for i in range(0, len(res)):
-        # Dans le dictionnaire, on a les valeurs de la question et
-        # un tableau de réponses qui contient toutes les réponses associées à la question
-        dico = {
-            "id": res[i][0],
-            "enonce": res[i][1],
-            "enseignant": res[i][2],
-            "etiquettes": fonctionLabels.getLiensEtiquettes(res[i][0], userId),
-            "reponses": getReponses(res[i][0]),
-            "type": res[i][3],
-            "numerique": res[i][4]
-        }
-        data.append(dico)
-
-    # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
-    # et seulement celle qui n'ont pas d'étiquette
-
-    # Fermeture de la connection
-    cur.close()
-    con.close()
-
-    return data
-
-
-# fonction qui retourne la question désignée par son id (avec ses réponses)
-# sous la forme suivante :
-#   {
-#     "id": 1,
-#     "type": 0,
-#     "enonce": "Qui a calculé la circonférence de la terre en -200 av JC ?",
-#     "enseignant": 1
-#     "etiquettes": [{"couleur": "#000000", "nom": "histoire"},...],
-#     "reponses": [{"id": 1, "question": 1, "reponse": "Ératosthène", "reponseJuste": 1},...],
-#   }
-def getQuestion(userId, id):
-    # Connection à la table
-    con = sqlite3.connect('database.db')
-    cur = con.cursor()
-
-    # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
-    # et seulement celle qui ont une etiquette
-    sql = """SELECT Questions.id, Questions.enonce, Questions.enseignant, Questions.type, Questions.numerique FROM Questions 
-             WHERE Questions.enseignant = ? AND id = ?"""
-
-    res = cur.execute(sql, (userId, id))
-    res = res.fetchone()
-
-    if not res:
-        return False
-
-    # Dans le dictionnaire, on a les valeurs de la question et
-    # un tableau de réponses qui contient toutes les réponses associées à la question
-    dic = {
-        "id": res[0],
-        "type": res[3],
-        "enonce": res[1],
-        "enseignant": res[2],
-        "etiquettes": fonctionLabels.getLiensEtiquettes(res[0], userId),
-        "reponses": getReponses(res[0]),
-        "numerique": res[4]
-    }
-
-    # Requêtes pour récupérer toutes les questions faites par le prof grâce à l'id de celle-ci
-    # et seulement celle qui n'ont pas d'étiquette
-
-    # Fermeture de la connection
-    cur.close()
-    con.close()
-
-    return dic
-
-
-# fonction qui permet l'ajout d'une question (ses reponses, et ses etiquettes)
-# faite par un enseignant dans la table des questions
-def addQuestions(questionType, enonce, enseignant, etiquettes, reponses, numerique):
-    if len(reponses) == 0 or len(reponses[0]) == 0:
-        return False
-    try:
-        # Connection à la table
-        con = sqlite3.connect('database.db')
-        cur = con.cursor()
-
-        # Insertion de la nouvelle question dans la table des questions
-        sql = "INSERT INTO Questions (type, enonce, enseignant, numerique) VALUES (?, ?, ?, ?);"
-        data = (questionType, enonce, enseignant, numerique)
-        cur.execute(sql, data)
-        con.commit()
-
-        # Ensuite, on récupère l'id de la dernière question insérée
-        questionsId = cur.lastrowid
+        # Range les données dans un tableau de dictionnaires
+        data = []
+        for i in range(0, len(result)):
+            dico = {
+                "id": result[i][0],
+                "enonce": result[i][1],
+                "etiquettes": fonctionLabels.getLiensEtiquettes(result[i][0]),
+                "reponses": getReponses(result[i][0]),
+                "type": result[i][2],
+                "numerique": result[i][3]
+            }
+            data.append(dico)
 
         # Fermeture de la connection
-        cur.close()
-        con.close()
+        cursor.close()
+        conn.close()
+        return data
 
-        # On ajoute tous les liens entre les étiquettes et les questions
-        # en ayant comme prérequis que les étiquettes sont déjà créées et la question aussi
-        for i in range(0, len(etiquettes)):
-            fonctionLabels.addLiensEtiquettesQuestions(etiquettes[i]["nom"], questionsId, enseignant)
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélecton des questions : ", error)
+        return False
 
-        # On ajoute toutes les réponses associées à la question
-        for i in range(0, len(reponses)):
+
+# Retourne une question
+# Param : l'id de la question
+# Return : un dico sous la forme suivante
+#               {
+#                 "id": 1,
+#                 "type": 0,
+#                 "enonce": "Qui a calculé la circonférence de la terre en -200 av JC ?",
+#                 "enseignant": 1
+#                 "etiquettes": [{"couleur": "#000000", "nom": "histoire"},...],
+#                 "numerique": ""
+#                 "reponses": [{"id": 1, "question": 1, "reponse": "Ératosthène", "reponseJuste": 1},...],
+#               }
+def getQuestion(id):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Récupère la question
+        result = cursor.execute("SELECT Questions.id, Questions.enonce, Questions.enseignant, Questions.type, Questions.numerique \
+                                    FROM Questions WHERE id = ?;", (id,))
+        result = result.fetchone()
+
+        if not result:
+            return False
+
+        # Ordonne les données dans un dico
+        data = {
+            "id": result[0],
+            "type": result[3],
+            "enonce": result[1],
+            "enseignant": result[2],
+            "etiquettes": fonctionLabels.getLiensEtiquettes(result[0]),
+            "reponses": getReponses(result[0]),
+            "numerique": result[4]
+        }
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return data
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélecton de la question : ", error)
+        return False
+
+
+# Ajoute les liens entre les étiquettes et la question
+# Pré-requis : la question et les étiquettes sont déjà créées
+# Param : - conn et cursor : BDD
+#         - id : id de la question (int)
+#         - etiquettes : les étiquettes à lier (tab de dico)
+#                           [ {"couleur": "000000", "nom": "musique"},
+#                             {"couleur": "FFFFFF", "nom": "ondes"}, ...
+#                           ]
+#         - enseignant : id du créateur de la question
+def addLinksQuestionLabels(conn, cursor, id, etiquettes, enseignant):
+    try:
+        for i in range(len(etiquettes)):
+            result = cursor.execute("SELECT id FROM Etiquettes WHERE nom=? AND enseignant=?;", (etiquettes[i]["nom"], enseignant)) #si deux étiquettes ont le même nom : probleme (id au lieu de "nom")
+            result = result.fetchone()
+            cursor.execute("INSERT INTO liensEtiquettesQuestions (question, etiquette) VALUES(?,?);", (id, result[0]))
+            conn.commit()
+            return True
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question : ", error)
+        return False
+
+
+# Ajoute les réponses de la question
+# Param : - conn et cursor : BDD
+#         - id : id de la question (int)
+#         - reponses : les réponses à insérer (tab de dico)
+#                           [ {"reponse": "piano", "reponseJuste": True},
+#                             {"reponse": "guitare", "reponseJuste": False}, ...
+#                           ]
+def addReponses(conn, cursor, id, reponses):
+    try:
+        for i in range(len(reponses)):
             if len(reponses[i]["reponse"]) != 0:
                 if (reponses[i]["reponseJuste"]):
                     reponseJuste = 1
                 else:
                     reponseJuste = 0
-                addReponses(reponses[i]["reponse"], reponseJuste, questionsId)
+
+                # Insertion des données dans la table
+                cursor.execute("INSERT INTO Reponses (reponse, reponseJuste, question) VALUES (?, ?, ?);", (reponses[i]["reponse"], reponseJuste, id))
+                conn.commit()
 
         return True
+
     except sqlite3.Error as error:
-        print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
+        print("Une erreur est survenue lors de l'insertion des réponses : ", error)
         return False
 
 
-# fonction qui renvoie un tableau de dico qui contient les réponses :
-# [{"id": 1, "reponse": "Dounnouvahannne", "reponseJuste": 1, "question": 1},...]
-def getReponses(questionId):
-    # Connection à la table
-    con = sqlite3.connect('database.db')
-    cur = con.cursor()
+# Ajoute une question à la BDD avec ses réponses et ses étiquettes
+# Param : - questionType : type de la question (1 pour numérique, 0 pour choix)
+#         - enonce : énonce de la question (string)
+#         - enseignant : créateur de la question
+#         - etiquettes : les étiquettes à lier (tab de dico)
+#                             [ {"couleur": "000000", "nom": "C#"},
+#                               {"couleur": "FFFFFF", "nom": "C++"}, ...
+#                             ]
+#         - reponses : les réponses à insérer (tab de dico)
+#                             [ {"reponse": "Steam", "reponseJuste": True},
+#                               {"reponse": "EpicGames", "reponseJuste": False}, ...
+#                             ]
+#         - numérique : la réponse numérique (float)
+def addQuestion(questionType, enonce, enseignant, etiquettes, reponses, numerique):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
-    # Requêtes pour récupérer toutes les réponses associées à la question grâce à l'id de celle-ci
-    res = cur.execute("SELECT * FROM Reponses WHERE question=?", (questionId,))
-    res = res.fetchall()
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
 
-    # On les range dans un dictionnaire pour que ce soit plus simple d'utilisation
-    data = []
-    for i in range(0, len(res)):
-        dico = {
-            "id": res[i][0],
-            "reponse": res[i][1],
-            "reponseJuste": bool(res[i][2]),
-            "question": res[i][3]
-        }
-        data.append(dico)
+        # Insertion de la question dans la table
+        cursor.execute("INSERT INTO Questions (type, enonce, enseignant, numerique) VALUES (?, ?, ?, ?);", (questionType, enonce, enseignant, numerique))
+        conn.commit()
 
-    # Fermeture de la connection
-    cur.close()
-    con.close()
-    return data
+        # Récupère l'id de la dernière question insérée (avec l'auto-increment)
+        questionsId = cursor.lastrowid
+
+        # Ajoute les liens entre les étiquettes et les questions et ajoute les réponses
+        addLinksQuestionLabels(conn, cursor, questionsId, etiquettes, enseignant)
+        if reponses is not None:
+            addReponses(conn, cursor, questionsId, reponses)
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return True
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de l'insertion de la question : ", error)
+        return False
 
 
-# fonction qui permet l'ajout d'une réponse associée à une question, dans la table reponses de la BDD
-def addReponses(reponse, reponseJuste, question):
+# Renvoie les réponses d'une question
+# Param : l'id de la question
+# Return : un tableau de dico avec les réponses
+#           [{"id": 1, "reponse": "La réponse D", "reponseJuste": 1, "question": 1},...]
+def getReponses(id):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Requêtes pour récupérer toutes les réponses associées à la question grâce à l'id de celle-ci
+        result = cursor.execute("SELECT * FROM Reponses WHERE question=?;", (id,))
+        result = result.fetchall()
+
+        # Range les données dans un tableau de dictionnaires
+        data = []
+        for i in range(0, len(result)):
+            dico = {
+                "id": result[i][0],
+                "reponse": result[i][1],
+                "reponseJuste": bool(result[i][2]),
+                "question": result[i][3]
+            }
+            data.append(dico)
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return data
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélection des réponses : ", error)
+        return False
+
+
+# Supprime une question
+# Param : id de la question
+def deleteQuestion(id):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
+        # Supprime la question (et tout ce qui est lié à elle avec delete on cascade)
+        cursor.execute("DELETE FROM Questions WHERE id = ?;", (id,))
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return True
+    
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la suppression de la question : ", error)
+        return False
+
+
+# Modifie une question : supprime ses réponses et ses liens d'étiquettes, modifie la question, et ajoutes les réponses et liens
+# Param : - id : id de la question (int)
+#         - questionType : type de la question (1 pour numérique, 0 pour choix)
+#         - enonce : énonce de la question (string)
+#         - etiquettes : les étiquettes à lier (tab de dico)
+#                             [ {"couleur": "000000", "nom": "C#"},
+#                               {"couleur": "FFFFFF", "nom": "C++"}, ...
+#                             ]
+#         - reponses : les réponses à insérer (tab de dico)
+#                             [ {"reponse": "Steam", "reponseJuste": True},
+#                               {"reponse": "EpicGames", "reponseJuste": False}, ...
+#                             ]
+#         - numérique : la réponse numérique (float)
+def editQuestion(id, questionType, enonce, etiquettes, reponses, numerique):
+    try:
+        # Connection à la table
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
+        # Suppression des réponses et des liens entre étiquette et question
+        cursor.execute("DELETE FROM Reponses WHERE question = ?;", (id,))
+        conn.commit()
+        cursor.execute("DELETE FROM liensEtiquettesQuestions WHERE question = ?;", (id,))
+        conn.commit()
+
+        # Mise à jour de la question
+        cursor.execute("UPDATE Questions \
+                        SET type = ?, enonce = ?, numerique = ? \
+                        WHERE id = ?;", (questionType, enonce, numerique, id))
+        conn.commit()
+
+        ###TEMPORAIRE /!\
+        result = cursor.execute("SELECT enseignant FROM Questions WHERE id=?;", (id,)) ###CECI N'EST PAS OPTI
+        idprof = result.fetchone()
+        ###TEMPORAIRE /!\
+
+        # Ajout des liens entre les étiquettes et les questions et ajoute les réponses
+        addLinksQuestionLabels(conn, cursor, id, etiquettes, idprof[0])
+        addReponses(conn, cursor, id, reponses)
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return True
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la modification de la question : ", error)
+        return False
+
+# fonction qui permet l'ajout d'une réponse associée à une question, dans la table reponses de la BDD /!\ FONCTION PASSEE A MODIFIE /!\
+def addReponse(reponse, reponseJuste, question):
     try:
         # Connection à la table
         con = sqlite3.connect('database.db')
         cur = con.cursor()
 
         # insertion des données dans la table des reponses
-        sql = "INSERT INTO Reponses (reponse, reponseJuste, question) VALUES (?, ?, ?)"
+        sql = "INSERT INTO Reponses (reponse, reponseJuste, question) VALUES (?, ?, ?, ?)"
         data = (reponse, reponseJuste, question)
         cur.execute(sql, data)
         con.commit()
@@ -201,41 +333,3 @@ def addReponses(reponse, reponseJuste, question):
     except sqlite3.Error as error:
         print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
         return False
-
-
-# Supprime la question donnée en paramètre dans la base de donnée
-def deleteQuestion(id, userId):
-    try:
-        con = sqlite3.connect('database.db')
-        cur = con.cursor()
-
-        # À mettre quand on veut supprimer des lignes,
-        # car les CASCADE ont besoin de cet attribut en True
-        cur.execute("PRAGMA foreign_keys = ON")
-
-        sql = 'DELETE FROM Questions WHERE id = ? AND enseignant=?'
-        cur.execute(sql, (id, userId))
-
-        res = cur.execute("SELECT * FROM Questions WHERE id = ?", (id,))
-        res = res.fetchall()
-        con.commit()
-
-        cur.close()
-        con.close()
-        if len(res) == 0:
-            return True
-        else:
-            return False
-    except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la suppression !", error)
-        return False
-
-
-# Edit une question, c'est-à-dire supprime la question et la remet dans la base de données
-# ATTENTION à l'id qui change
-def editQuestion(id, questionType, enonce, enseignant, etiquettes, reponses, numerique):
-    # Verifie si l'id correspond à une question faite par l'enseignant
-    if not deleteQuestion(id, enseignant):
-        return False
-
-    return addQuestions(enonce, questionType, enseignant, etiquettes, reponses, numerique)

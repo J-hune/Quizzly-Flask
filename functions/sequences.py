@@ -215,3 +215,35 @@ def getAllSequences(idEnseignant):
     except sqlite3.Error as error:
         print("Échec de la selection de l'élément dans la table sqlite", error)
         return False
+
+
+def getStatisticsBySequence(sequenceId):
+    try:
+        # Connection à la table
+        conn = sqlite3.connect("database.db")
+        cursor = conn.cursor()
+        #                                                   nbParticipant              nbRéponse    nbBonneRéponse      premièreRéponse (date début)
+        result = cursor.execute("SELECT E.prenom, E.nom, COUNT(DISTINCT A.etudiant), COUNT(A.id), SUM(A.est_correcte), MIN(A.date) \
+                        FROM Sequences S \
+                        JOIN Enseignants E ON S.enseignant = E.id \
+                        JOIN Archives A ON S.id = A.diffusion \
+                        WHERE S.id = ? ",(sequenceId,))
+        result = result.fetchone()
+
+        data = {"enseignant": result[0] + " " + result[1],
+                "nbParticipant": result[2],
+                "pourcentageReussite": ((result[4] / result[3])*100),
+                "date": result[5],
+                "id": sequenceId}
+        print(data)
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+
+        return result
+
+    except sqlite3.Error as error:
+        print("Échec de la sélection de l'élément dans la table sqlite :", error)
+        return False
+
+getStatisticsBySequence(1)

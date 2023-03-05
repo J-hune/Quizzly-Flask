@@ -43,7 +43,7 @@ def addSequence():
 @sequences.route('/editSequence/<id>', methods=['POST'])
 def editSequence(id):
 
-    # Si il est en session
+    # S'il est en session
     if 'user' in session:
         # Si c'est un enseignant
         if session["user"]["type"] == "Enseignant":
@@ -166,6 +166,10 @@ def getSequence(id):
             "status": 400,
             "reason": "Session non disponible"
         }), 400
+
+@sequences.route('/getStatistics>', methods=['GET'])
+def getSatisticsBySequence(id):
+    pass
 
 
 @sequences.route("/getAllSequences", methods=["GET"])

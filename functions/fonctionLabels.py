@@ -90,14 +90,17 @@ def searchLabel(nomLabel):
         return False
 
 
-# Ajoute une étiquette avec une couleur choisie dans la base de donnée
+# Ajoute une étiquette
+# Param : - nom : nom de l'étiquette (string)
+#         - couleur : couleur de l'étiquette ex : #000000 (string)
+#         - userID : créateur de l'étiquette (int)
 def addLabel(nomLabel, couleur, userID):
     if not searchLabel(nomLabel):
         try:
             con = sqlite3.connect('database.db')
             cur = con.cursor()
 
-            sql = "INSERT INTO Etiquettes ('nom','couleur','enseignant') VALUES(?,?,?)"
+            sql = "INSERT INTO Etiquettes ('nom','couleur','enseignant') VALUES(?,?,?);"
             value = (nomLabel, couleur, userID)
             cur.execute(sql, value)
             con.commit()
@@ -107,15 +110,16 @@ def addLabel(nomLabel, couleur, userID):
             return True
 
         except sqlite3.Error as error:
-            print("Une erreur est survenue lors de la création de l'étiquette !", error)
+            print("Une erreur est survenue lors de la création de l'étiquette : ", error)
             return False
     else:
         return False
 
 
-# Requêtes pour ajouter un nouveau lien entre une question et une étiquette
+# Ajoute les liens entre la question et les étiquettes
 # pré-requis on a la question et l'étiquette dans la BDD
-def addLiensEtiquettesQuestions(etiquette, question, userID):
+# Fonction migrée vers question.py en addLinksQuestionLabels /!\ À GARDER POUR LE MOMENT /!\
+"""def addLiensEtiquettesQuestions(etiquette, question, userID):
     try:
         con = sqlite3.connect('database.db')
         cur = con.cursor()
@@ -139,19 +143,19 @@ def addLiensEtiquettesQuestions(etiquette, question, userID):
             return False
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question !", error)
-        return False
+        print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question : ", error)
+        return False"""
 
 
 # Fonction qui récupère les données des étiquettes associées a une question
 # et les renvoie sous forme de dico {"nom": ... , "couleur": ...}
-def getLiensEtiquettes(questionId, userId):
+def getLiensEtiquettes(questionId):
     con = sqlite3.connect('database.db')
     cur = con.cursor()
 
     res = cur.execute("""SELECT nom, couleur FROM Etiquettes
                     JOIN liensEtiquettesQuestions ON Etiquettes.id = liensEtiquettesQuestions.etiquette 
-                    WHERE liensEtiquettesQuestions.question=? AND Etiquettes.enseignant=?""", (questionId, userId))
+                    WHERE liensEtiquettesQuestions.question=?;""", (questionId,))
     res = res.fetchall()
     data = []
     for i in range(0, len(res)):
@@ -161,3 +165,29 @@ def getLiensEtiquettes(questionId, userId):
     cur.close()
     con.close()
     return data
+
+
+# Supprime une étiquette
+# Param : l'id de l'étiquette
+# @Unused
+def deleteLabel(id):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
+        # Insertion des données dans la table
+        cursor.execute("DELETE FROM Etiquettes WHERE id = ?;", (id,))
+        conn.commit()
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return True
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la suppression de l'étiquette la table sqlite : ", error)
+        return False

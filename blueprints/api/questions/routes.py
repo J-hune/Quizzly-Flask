@@ -26,7 +26,7 @@ def getQuestion(id):
     # Vérification que l'utilisateur est en session
     if 'user' in session:
         user = session.get("user")
-        question = functionQuestions.getQuestion(user['id'], id)
+        question = functionQuestions.getQuestion(id)
         if not question:
             return jsonify({
                 "status": 400,
@@ -58,7 +58,6 @@ def addQuestion():
     #   "reponses": [
     #     {
     #       "reponse": "",
-    #       "reponseType": 0,
     #       "reponseJuste": False
     #     }
     #   ],
@@ -68,7 +67,7 @@ def addQuestion():
     if 'user' in session:
         data = request.get_json(force=True)
         user = session.get("user")
-        if functionQuestions.addQuestions(
+        if functionQuestions.addQuestion(
                 data["type"],
                 data["enonce"],
                 user["id"],
@@ -103,7 +102,7 @@ def addReponses():
         }), 400
 
     # La fonction renvoie True si elle a ajouté dans la table et False sinon
-    if functionQuestions.addReponses(data["reponse"], data["reponseJuste"], data["question"]):
+    if functionQuestions.addReponse(data["reponse"], data["reponseJuste"], data["question"]):
         return jsonify(success=True), 200
     else:
         return jsonify({
@@ -118,7 +117,7 @@ def deleteQuestion(id):
     # Vérification que l'utilisateur est en session
     if 'user' in session:
         user = session.get("user")
-        if functionQuestions.deleteQuestion(id, user["id"]):
+        if functionQuestions.deleteQuestion(id):
             return jsonify(success=True), 200
         else:
             return jsonify({
@@ -150,7 +149,6 @@ def editQuestion(id):
     #   "reponses": [
     #     {
     #       "reponse": "",
-    #       "reponseType": 0,
     #       "reponseJuste": False
     #     }
     #   ],
@@ -164,7 +162,6 @@ def editQuestion(id):
         if functionQuestions.editQuestion(id,
                                           data["enonce"],
                                           data["type"],
-                                          user["id"],
                                           data["etiquettes"],
                                           data["reponses"],
                                           data["numerique"]
