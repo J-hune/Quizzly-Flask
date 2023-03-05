@@ -1,209 +1,241 @@
 import sqlite3
-
 from werkzeug.security import generate_password_hash
 
 
-# teste si l'étudiant existe dans la base de donnée
-def getEtu(studentId):
-    try:
-        # Connection à la table
-        con = sqlite3.connect('database.db')
-        cur = con.cursor()
-
-        # Selection des données dans la table
-        cur.execute("SELECT nom, prenom FROM Etudiants WHERE id = ?;", (studentId,))
-        res = cur.fetchall()
-
-        # Fermeture de la connection
-        cur.close()
-        con.close()
-
-        if len(res) == 0:
-            return False
-        return True
-    except sqlite3.Error as error:
-        print("Échec de l'insertion de la variable Python dans la table sqlite", error)
-        return False
-
-
-# ajoute les étudiants dans la base de donnée
-# Reçois des données sous cette forme :
-# [{"id" : 1332214, "nom":"DeLaTour", "prenom":"Jean"},
-# {"id" : 1322324, "nom":"DeLaTour", "prenom":"Jeanne"},
-# ]
-def addStudent(ListeDeDictionnaire):
-    nbStudentAdd = 0
+# Ajoute les étudiants en paramètre dans la base de donnée
+# Param : tableau d'étudiant sous cette forme
+#           [{"id" : 1332214, "nom":"DeLaTour", "prenom":"Jean"},
+#            {"id" : 1322324, "nom":"DeLaTour", "prenom":"Jeanne"}, ...
+#           ]
+def addStudent(students):
+    nbStudentAdded = 0
 
     # Pour chaque étudiant
-    for i in range(len(ListeDeDictionnaire)):
+    for i in range(len(students)):
         try:
             # Connection à la table
-            con = sqlite3.connect('database.db')
-            cur = con.cursor()
+            conn = sqlite3.connect('database.db')
+            cursor = conn.cursor()
 
-            # On chiffre le mot de passe
-            hashedPassword = generate_password_hash(ListeDeDictionnaire[i]["id"], 'sha256')
+            # Chiffrage du mot de passe
+            hashedPassword = generate_password_hash(students[i]["id"], 'sha256')
 
             # Insertion des données dans la table
             sql = "INSERT or IGNORE INTO Etudiants (id, nom, prenom, mdp) VALUES (?, ?, ?, ?);"
-            data = (ListeDeDictionnaire[i]["id"],
-                    ListeDeDictionnaire[i]["nom"],
-                    ListeDeDictionnaire[i]["prenom"],
+            data = (students[i]["id"],
+                    students[i]["nom"],
+                    students[i]["prenom"],
                     hashedPassword)
-            cur.execute(sql, data)
-            con.commit()
+            cursor.execute(sql, data)
+            conn.commit()
 
-            # Si le dernier element inséré, a le meme id que l'étudiant actuel on l'a réellement ajouté
-            if cur.lastrowid == int(ListeDeDictionnaire[i]["id"]):
-                nbStudentAdd += 1
+            # Si le dernier élément inséré a le même id que l'étudiant actuel, l'étudiant a réellement été ajouté,
+            # sinon l'étudiant était donc déjà dans la BDD
+            if cursor.lastrowid == int(students[i]["id"]):
+                nbStudentAdded += 1
 
             # Fermeture de la connection
-            cur.close()
-            con.close()
+            cursor.close()
+            conn.close()
+
         except sqlite3.Error as error:
-            print("Échec de l'insertion de la variable Python dans la table sqlite", error)
+            print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
             return -1
-    return nbStudentAdd
+    return nbStudentAdded
 
 
-# Retourne tous les étudiants de la BDD sous cette forme :
-# [
-#   {
-#      "id": 42,
-#      "nom": "Smith",
-#      "prenom": "John",
-#      "avatar": "data:image/png;base64,iVBORw0KGgo..."
-#    }, ...
-# ]
-def getStudents():
+# Retourne les informations sur l'étudiant en paramètre
+# Param : numéro de l'étudiant
+# Return : un dico sous la forme suivante
+#           {
+#               "prenom": "Ada",
+#               "nom": "Lovelace",
+#               "avatar": ""data:image/png;base64,iVBORw0KGgo..."
+#           }
+def getStudent(id):
+    try:
+        # Connection à la table
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Selection des données dans la table
+        cursor.execute("SELECT nom, prenom, avatar FROM Etudiants WHERE id = ?;", (id,))
+        result = cursor.fetchone()
+
+        # Si l'étudiant n'est pas trouvé
+        if not result:
+            return False
+
+        dico = {
+            "nom": result[0],
+            "prenom": result[1],
+            "avatar": result[2]
+        }
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return dico
+
+    except sqlite3.Error as error:
+        print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
+        return False
+
+
+# Retourne tous les étudiants de la BDD
+# Return : tableau de dico d'étudiant sous la forme suivante
+#           [
+#             {
+#               "id": 42,
+#               "prenom": "John",
+#               "nom": "Smith",
+#               "avatar": "data:image/png;base64,iVBORw0KGgo..."
+#              }, ...
+#           ]
+def getAllStudents():
     # Connection à la table
-    con = sqlite3.connect('database.db')
-    cur = con.cursor()
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
 
-    cur.execute("SELECT Etudiants.id, Etudiants.nom, Etudiants.prenom, Etudiants.avatar FROM Etudiants")
-    res = cur.fetchall()
+    # Récupère l'id, le nom, le prénom et l'avatar de chaque étudiant dans la BDD
+    cursor.execute("SELECT Etudiants.id, Etudiants.nom, Etudiants.prenom, Etudiants.avatar FROM Etudiants;")
+    result = cursor.fetchall()
 
     data = []
-    for i in range(len(res)):
+    for i in range(len(result)):
         dico = {
-            "id": res[i][0],
-            "nom": res[i][1],
-            "prenom": res[i][2],
-            "avatar": res[i][3]
+            "id": result[i][0],
+            "nom": result[i][1],
+            "prenom": result[i][2],
+            "avatar": result[i][3]
         }
         data.append(dico)
 
     # Fermeture de la connection
-    cur.close()
-    con.close()
-
+    cursor.close()
+    conn.close()
     return data
 
 
-def changePassword(NumEtudiant, password):
+# Modifie le mot de passe d'un étudiant
+def changePassword(id, password):
     try:
         # On chiffre le mot de passe
         hashedPassword = generate_password_hash(password, 'sha256')
 
         # Connection à la table
-        con = sqlite3.connect('database.db')
-        cur = con.cursor()
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
         # Mise à jour des données dans la table
-        cur.execute("UPDATE Etudiants SET mdp = ? WHERE id = ?;", (hashedPassword, NumEtudiant))
-        con.commit()
+        cursor.execute("UPDATE Etudiants SET mdp = ? WHERE id = ?;", (hashedPassword, id))
+        conn.commit()
 
         # Fermeture de la connection
-        cur.close()
-        con.close()
-        return True
-    except sqlite3.Error as error:
-        print("Échec de l'insertion de la variable Python dans la table sqlite", error)
-        return False
-
-
-# Modifie l'avatar d'un étudiant
-def editAvatar(NumEtudiant, avatar):
-    try:
-        # Connection à la table
-        con = sqlite3.connect('database.db')
-        cur = con.cursor()
-
-        # Mise à jour de la donnée dans la table
-        cur.execute("UPDATE Etudiants SET avatar = ? WHERE id = ?;", (avatar, NumEtudiant))
-        con.commit()
-
-        # Fermeture de la connection
-        cur.close()
-        con.close()
+        cursor.close()
+        conn.close()
         return True
 
     except sqlite3.Error as error:
-        print("Échec de l'insertion de la variable Python dans la table sqlite", error)
+        print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
         return False
 
 
-def getAvatar(NumEtudiant):
+# Modifie l'avatar de l'étudiant en paramètre
+def editAvatar(id, avatar):
     try:
         # Connection à la table
-        con = sqlite3.connect('database.db')
-        cur = con.cursor()
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
         # Mise à jour de la donnée dans la table
-        result = cur.execute("SELECT avatar FROM Etudiants WHERE id = ?;", (NumEtudiant, ))
+        cursor.execute("UPDATE Etudiants SET avatar = ? WHERE id = ?;", (avatar, id))
+        conn.commit()
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return True
+
+    except sqlite3.Error as error:
+        print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
+        return False
+
+
+# Retourne l'avatar de l'étudiant en paramètre
+def getAvatar(id):
+    try:
+        # Connection à la table
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Mise à jour de la donnée dans la table
+        result = cursor.execute("SELECT avatar FROM Etudiants WHERE id = ?;", (id, ))
         result = result.fetchone()
-        con.commit()
+        conn.commit()
 
         # Fermeture de la connection
-        cur.close()
-        con.close()
+        cursor.close()
+        conn.close()
         if result:
             return result[0]
         return False
+
     except sqlite3.Error as error:
         print("Échec de la selection de la variable Python dans la table sqlite : ", error)
         return False
 
-# removeStudent renvoie :
-#  0 si bon
-#  1 si mauvaise requete
-#  2 si l'étudiant n'est pas trouvé
-def removeStudent(studentId):
-    # Si l'étudiant existe
-    if getEtu(studentId):
+
+# Supprime l'étudiant en paramètre de la BDD
+# Return : 0 si réussite
+#          1 si échec de la requête
+#          2 si l'étudiant n'est pas trouvé
+def removeStudent(id):
+    # Vérifie si l'étudiant existe
+    if getStudent(id):
         try:
             # Connection à la table
-            con = sqlite3.connect('database.db')
-            cur = con.cursor()
+            conn = sqlite3.connect('database.db')
+            cursor = conn.cursor()
+
+            # Active les clés étrangères
+            cursor.execute("PRAGMA foreign_keys = ON")
 
             # Suppression des données dans la table
-            cur.execute("DELETE FROM Etudiants WHERE id = ?;", (studentId,))
-            con.commit()
+            cursor.execute("DELETE FROM Etudiants WHERE id = ?;", (id,))
+            conn.commit()
+
             # Fermeture de la connection
-            cur.close()
-            con.close()
+            cursor.close()
+            conn.close()
             return 0
+
         except sqlite3.Error as error:
-            print("Échec de la suppression de l'élément dans la table sqlite", error)
+            print("Échec de la suppression de l'élément dans la table sqlite : ", error)
             return 1
     else:
         return 2
 
 
-def removeAllStudent():
+# Supprime tous les étudiants de la BDD
+def removeAllStudents():
     try:
         # Connection à la table
-        con = sqlite3.connect('database.db')
-        cur = con.cursor()
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Activation des clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
 
         # Suppression de toutes les données dans la table
-        cur.execute("DELETE FROM Etudiants;")
-        con.commit()
+        cursor.execute("DELETE FROM Etudiants;")
+        conn.commit()
 
         # Fermeture de la connection
-        cur.close()
-        con.close()
+        cursor.close()
+        conn.close()
         return True
+
     except sqlite3.Error as error:
         print("Échec de la suppression de l'élément dans la table sqlite", error)
         return False

@@ -50,8 +50,8 @@ def removeStudent(id):
         # Si c'est un enseignant
         if session["user"]["type"] == "Enseignant":
 
-            # Renvoie 0 si bon
-            # 1 si mauvaise requete
+            # 0 si réussite
+            # 1 si mauvaise requête
             # 2 si l'étudiant n'est pas trouvé
             remove = functions.students.removeStudent(id)
 
@@ -91,7 +91,7 @@ def removeAllStudent():
         if session["user"]["type"] == "Enseignant":
 
             # Renvoie True si tout s'est bien passé
-            if functions.students.removeAllStudent():
+            if functions.students.removeAllStudents():
                 return jsonify(success=True), 200
             else:
                 return jsonify({
@@ -119,7 +119,7 @@ def getAllStudents():
     if 'user' in session:
         # Si c'est un enseignant
         if session["user"]["type"] == "Enseignant":
-            etudiants = functions.students.getStudents()
+            etudiants = functions.students.getAllStudents()
             return jsonify(etudiants)
         # Ce n'est pas un enseignant
         else:
