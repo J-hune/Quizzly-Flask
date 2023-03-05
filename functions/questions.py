@@ -24,7 +24,7 @@ def getQuestions(enseignant, etiquettes):
 
         # Si aucune étiquette n'est précisée, on récupère toutes les questions de l'enseignant
         if etiquettes is None:
-            sql = "SELECT id, enonce, enseignant, type, numerique FROM Questions WHERE enseignant = ?;"
+            sql = "SELECT id, enonce, type, numerique FROM Questions WHERE enseignant = ?;"
             parameters = (enseignant,)
         # Sinon, on récupère les questions de l'enseignant selon les étiquettes choisies
         else:
@@ -46,8 +46,8 @@ def getQuestions(enseignant, etiquettes):
                 "enonce": result[i][1],
                 "etiquettes": fonctionLabels.getLiensEtiquettes(result[i][0]),
                 "reponses": getReponses(result[i][0]),
-                "type": result[i][3],
-                "numerique": result[i][4]
+                "type": result[i][2],
+                "numerique": result[i][3]
             }
             data.append(dico)
 
