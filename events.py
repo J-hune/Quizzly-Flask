@@ -2,7 +2,7 @@ import copy
 import sqlite3
 
 from flask import session, request
-from flask_socketio import emit, join_room, close_room, rooms
+from flask_socketio import emit, join_room, leave_room, close_room
 
 from functions.broadcast import generateCode, deleteCode
 from functions.questions import getQuestion
@@ -14,6 +14,7 @@ sequenceEnCours = {}  # Les données de ce tableau peuvent servir pour les stats
 # {'2E2E2RR': ## Cle unique de la question/sequence
 #       {'name': '2E2E2RR', ## Cle unique de la question/sequence
 #        'enseignant': '5rPA12jQpLpxX3DdAAAH', ## Ici l'id de l'enseignant stocké à la création de la question
+#        'etudiants': Liste de sessions
 #        'stopReponses': False, ## Ici un boolean pour savoir si on peut encore rentrer des reponses
 #        'questions': [6, 16]
 #        'derQuestionTraitee': objet question
@@ -21,10 +22,7 @@ sequenceEnCours = {}  # Les données de ce tableau peuvent servir pour les stats
 #               {'reponse': 'Dounnouvahannne', 'idEtu': 532312},
 #               {'reponse': 'EREN YEAAAAAAAAAGGERRRR', 'idEtu': 231342},
 #               {'reponse': 'Dark Vador', 'idEtu': 344322},
-#               {'reponse': 'Platon', 'idEtu': 125749}],
-#        'reponses': [{'id': 1, 'question': 1, 'reponse': 'Ératosthène', 'reponseJuste': 1}]
-#        Au-dessus un tableau qui contient la reponse juste pour les questions numériques
-#        ou toutes les reponses d'un QCM (meme les fausses)
+#               {'reponse': 'Platon', 'idEtu': 125749}]
 #        }
 # }
 
@@ -58,6 +56,21 @@ def disconnect():
                 deleteCode(room_id)
                 del sequenceEnCours[room_id]
 
+    elif 'user' in session and session["user"]["type"] == "Etudiant":
+        # On cherche si l'étudiant est dans une séquence en cours
+        if 'room' in session["user"]:
+            room_id = session["user"]["room"]
+            del session["user"]["room"]
+            leave_room(room_id)
+
+            # on supprime l'étudiant de la liste
+            sequenceEnCours[room_id]["etudiants"] = [
+                etudiant for etudiant in sequenceEnCours[room_id]["etudiants"] if
+                etudiant["id"] != session["user"]["id"]
+            ]
+
+            emit("renderStudentList", sequenceEnCours[room_id]["etudiants"], to=room_id)
+
 
 # Quand un enseignant lance une séquence
 def createRoom(sequence_id):
@@ -81,27 +94,29 @@ def createRoom(sequence_id):
 
         else:
             # Génération de l'id de la room :
-            roomId = generateCode()
+            room_id = generateCode()
 
             # Le client est mis dans la room
-            join_room(roomId)
-            session["user"]["room"] = roomId
+            join_room(room_id)
+            session["user"]["room"] = room_id
 
             # On crée une room dans le tableau des questions en cours de
             # diffusion avec toutes les informations utiles aux echanges de reponses et questions
-            sequenceEnCours[roomId] = {'name': roomId,
-                                       'enseignant': request.sid,
-                                       "questions": [int(t[0]) for t in res],
-                                       "derQuestionTraitee": 0,
-                                       "stopReponses": False,
-                                       "reponsesEtudiant": [],
-                                       "reponses": []
-                                       }
+            sequenceEnCours[room_id] = {'name': room_id,
+                                        'enseignant': request.sid,
+                                        'etudiants': [],
+                                        "questions": [int(t[0]) for t in res],
+                                        "derQuestionTraitee": None,
+                                        "stopReponses": False,
+                                        "reponsesEtudiant": [],
+                                        "reponses": []
+                                        }
 
             # On demande au client d'afficher la page d'attente
-            emit("renderSequenceInit", roomId, to=roomId)
+            emit("renderSequenceInit", room_id, to=room_id)
 
 
+# Quand un enseignant passe à la question suivante
 def nextQuestion():
     # Si l'utilisateur est un enseignant et a une séquence en session
     if 'user' in session and session["user"]["type"] == "Enseignant" and 'room' in session["user"]:
@@ -117,7 +132,7 @@ def nextQuestion():
             sequenceEnCours[room_id]["derQuestionTraitee"] = copy.deepcopy(question)
 
             # On réactive les réponses
-            sequenceEnCours[room_id]["stopReponses"] = True
+            sequenceEnCours[room_id]["stopReponses"] = False
 
             # On supprime la valeur du numérique (pour éviter la triche)
             question.pop("numerique")
@@ -133,11 +148,12 @@ def nextQuestion():
 
         else:
             del session["user"]["room"]
-            emit("error", "La room de l'utilisateur n'existe pas")
+            emit("error", "La room #" + room_id + " n'existe pas")
     else:
         emit("error", "La room de l'utilisateur n'a pas pu être trouvée")
 
 
+# Quand un enseignant demande l'affichage de la correction
 def askCorrection():
     # Si l'utilisateur est un enseignant et a une séquence en session
     if 'user' in session and session["user"]["type"] == "Enseignant" and 'room' in session["user"]:
@@ -156,11 +172,12 @@ def askCorrection():
                 emit("renderCorrection", numerique, to=room_id)
 
         else:
-            emit("error", "La room de l'utilisateur n'existe pas")
+            emit("error", "La room #" + room_id + " n'existe pas")
     else:
         emit("error", "La room de l'utilisateur n'a pas pu être trouvée")
 
 
+# Quand un enseignant interdit les nouvelles réponses
 def askStopResponses():
     # Si l'utilisateur est un enseignant et a une séquence en session
     if 'user' in session and session["user"]["type"] == "Enseignant" and 'room' in session["user"]:
@@ -169,8 +186,49 @@ def askStopResponses():
         # Si la séquence existe
         if room_id in sequenceEnCours:
             sequenceEnCours[room_id]["stopReponses"] = True
+            emit("renderSubmitButton", not sequenceEnCours[room_id]["stopReponses"], to=room_id)
 
         else:
-            emit("error", "La room de l'utilisateur n'existe pas")
+            emit("error", "La room #" + room_id + " n'existe pas")
     else:
         emit("error", "La room de l'utilisateur n'a pas pu être trouvée")
+
+
+# Quand un étudiant rejoint une séquence
+def joinRoom(room_id):
+    if 'user' in session and session["user"]["type"] == "Etudiant":
+
+        # Si la séquence existe
+        if room_id in sequenceEnCours:
+            session["user"]["room"] = room_id
+            join_room(room_id)
+
+            # On ajoute l'étudiant dans la liste des étudiants connectés
+            sequenceEnCours[room_id]["etudiants"].append({
+                "id": session["user"]["id"],
+                "nom": session["user"]["firstname"] + " " + session["user"]["surname"]
+            })
+
+            # On modifie les données du professeur
+            emit("renderStudentList", sequenceEnCours[room_id]["etudiants"], to=room_id)
+
+            # On envoie la question si l'etudiant arrive en cours de séquence
+            if sequenceEnCours[room_id]["derQuestionTraitee"]:
+                question = copy.deepcopy(sequenceEnCours[room_id]["derQuestionTraitee"])
+
+                # On supprime la valeur du numérique (pour éviter la triche)
+                question.pop("numerique")
+
+                # Boucle pour supprimer la clé "reponseJuste" de chaque réponse (pour éviter la triche)
+                for reponse in question["reponses"]:
+                    reponse.pop("reponseJuste", None)
+
+                emit("renderQuestion", {
+                    "question": question,
+                    "last": len(sequenceEnCours[room_id]["questions"]) < 1
+                }, to=request.sid)
+
+                emit("renderSubmitButton", not sequenceEnCours[room_id]["stopReponses"], to=request.sid)
+
+        else:
+            emit("error", "La room #" + room_id + " n'existe pas")
