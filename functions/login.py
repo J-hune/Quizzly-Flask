@@ -1,6 +1,7 @@
 import sqlite3
 from flask import session
 from werkzeug.security import generate_password_hash, check_password_hash
+from functions.students import getAvatar
 
 
 # Ajoute l'utilisateur en session et en base de donnée
@@ -92,7 +93,7 @@ def studentExists(studentID, password):
                 'type': "Etudiant"
             }
             session.permanent = True
-            return session["user"]
+            return {**session["user"], "avatar": getAvatar(session["user"]["id"])}
     connection.commit()
 
     connection.close()
