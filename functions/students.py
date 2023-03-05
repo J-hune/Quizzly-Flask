@@ -13,7 +13,7 @@ def addStudent(students):
     # Pour chaque étudiant
     for i in range(len(students)):
         try:
-            # Connection à la table
+            # Connection à la BDD
             conn = sqlite3.connect('database.db')
             cursor = conn.cursor()
 
@@ -54,7 +54,7 @@ def addStudent(students):
 #           }
 def getStudent(id):
     try:
-        # Connection à la table
+        # Connection à la BDD
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
@@ -93,7 +93,7 @@ def getStudent(id):
 #              }, ...
 #           ]
 def getAllStudents():
-    # Connection à la table
+    # Connection à la BDD
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
@@ -123,7 +123,7 @@ def changePassword(id, password):
         # On chiffre le mot de passe
         hashedPassword = generate_password_hash(password, 'sha256')
 
-        # Connection à la table
+        # Connection à la BDD
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
@@ -144,7 +144,7 @@ def changePassword(id, password):
 # Modifie l'avatar de l'étudiant en paramètre
 def editAvatar(id, avatar):
     try:
-        # Connection à la table
+        # Connection à la BDD
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
@@ -165,7 +165,7 @@ def editAvatar(id, avatar):
 # Retourne l'avatar de l'étudiant en paramètre
 def getAvatar(id):
     try:
-        # Connection à la table
+        # Connection à la BDD
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
@@ -194,7 +194,7 @@ def removeStudent(id):
     # Vérifie si l'étudiant existe
     if getStudent(id):
         try:
-            # Connection à la table
+            # Connection à la BDD
             conn = sqlite3.connect('database.db')
             cursor = conn.cursor()
 
@@ -220,7 +220,7 @@ def removeStudent(id):
 # Supprime tous les étudiants de la BDD
 def removeAllStudents():
     try:
-        # Connection à la table
+        # Connection à la BDD
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
