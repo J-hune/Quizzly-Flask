@@ -64,13 +64,17 @@ def disconnect():
             del session["user"]["room"]
             leave_room(room_id)
 
-            # on supprime l'étudiant de la liste
-            sequenceEnCours[room_id]["etudiants"] = [
-                etudiant for etudiant in sequenceEnCours[room_id]["etudiants"] if
-                etudiant["id"] != session["user"]["id"]
-            ]
+            if room_id in sequenceEnCours:
+                # on supprime l'étudiant de la liste
+                sequenceEnCours[room_id]["etudiants"] = [
+                    etudiant for etudiant in sequenceEnCours[room_id]["etudiants"] if
+                    etudiant["id"] != session["user"]["id"]
+                ]
 
-            emit("renderStudentList", sequenceEnCours[room_id]["etudiants"], to=room_id)
+                emit("renderStudentList", sequenceEnCours[room_id]["etudiants"], to=room_id)
+
+            else:
+                emit("error", "La room #" + room_id + " n'existe pas")
 
 
 # Quand un enseignant lance une séquence
