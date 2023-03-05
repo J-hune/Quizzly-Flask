@@ -111,7 +111,7 @@ def nextQuestion():
         if room_id in sequenceEnCours:
 
             # On récupère la première question
-            question = getQuestion(session["user"]["id"], sequenceEnCours[room_id]["questions"].pop(0))
+            question = getQuestion(sequenceEnCours[room_id]["questions"].pop(0))
 
             # On modifie derQuestionTraitee avec une copie profonde de question
             sequenceEnCours[room_id]["derQuestionTraitee"] = copy.deepcopy(question)

@@ -191,7 +191,7 @@ def getAllSequences(idEnseignant):
                     dicoResult["questions"].append(resultRequetesQuestion[i][0])
 
                     # Appel a la fonction pour récupérer toutes les étiquettes associés a la question
-                    listeEtiquettesQuestions = getLiensEtiquettes(resultRequetesQuestion[i][0], idEnseignant)
+                    listeEtiquettesQuestions = getLiensEtiquettes(resultRequetesQuestion[i][0])
                     for j in range(len(listeEtiquettesQuestions)):
                         # On ajoute les étiquettes que si on ne les a pas
                         if not (listeEtiquettesQuestions[j]["nom"] in listeEtiquettesNomAjouté):
