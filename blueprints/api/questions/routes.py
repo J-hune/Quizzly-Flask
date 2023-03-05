@@ -159,13 +159,14 @@ def editQuestion(id):
     if 'user' in session:
         data = request.get_json(force=True)
         user = session.get("user")
-        if functionQuestions.editQuestion(id,
-                                          data["enonce"],
-                                          data["type"],
-                                          data["etiquettes"],
-                                          data["reponses"],
-                                          data["numerique"]
-                                          ):
+        if functionQuestions.editQuestion(
+                id,
+                data["type"],
+                data["enonce"],
+                data["etiquettes"],
+                data["reponses"],
+                data["numerique"]
+        ):
             return jsonify(success=True), 200
         else:
             return jsonify({
