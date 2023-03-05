@@ -2,7 +2,8 @@ from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from blueprints.api.routes import api
-from events import connect, disconnect, createRoom, askCorrection, nextQuestion, askStopResponses, joinRoom
+from events import connect, disconnect, createRoom, askCorrection, nextQuestion, askStopResponses, joinRoom, \
+    submitAnswer
 
 app = Flask(__name__)
 app.register_blueprint(api)
@@ -20,6 +21,7 @@ app.config.update(
 
 socketio = SocketIO(app, cors_allowed_origins="*", logger=True, async_mode='eventlet')
 
+# Events communs aux Enseignants et Etudiants
 socketio.on_event('connect', connect)
 socketio.on_event('disconnect', disconnect)
 
@@ -31,6 +33,7 @@ socketio.on_event('askStopResponses', askStopResponses)
 
 # Events Etudiants
 socketio.on_event('joinRoom', joinRoom)
+socketio.on_event('submitAnswer', submitAnswer)
 
 if __name__ == '__main__':
     socketio.run(app, port=5000, debug=True)

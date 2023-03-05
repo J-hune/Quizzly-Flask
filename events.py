@@ -10,21 +10,21 @@ from functions.questions import getQuestion
 sequenceEnCours = {}  # Les données de ce tableau peuvent servir pour les stats (il manque la date).
 
 
-# Les données seront stockées sous cette forme :
-# {'2E2E2RR': ## Cle unique de la question/sequence
-#       {'name': '2E2E2RR', ## Cle unique de la question/sequence
-#        'enseignant': '5rPA12jQpLpxX3DdAAAH', ## Ici l'id de l'enseignant stocké à la création de la question
-#        'etudiants': Liste de sessions
-#        'stopReponses': False, ## Ici un boolean pour savoir si on peut encore rentrer des reponses
-#        'questions': [6, 16]
-#        'derQuestionTraitee': objet question
-#        'reponsesEtudiant': [##Ici un tableau qui a toutes les reponses entrées par les étudiants (sert pour les stats)
-#               {'reponse': 'Dounnouvahannne', 'idEtu': 532312},
-#               {'reponse': 'EREN YEAAAAAAAAAGGERRRR', 'idEtu': 231342},
-#               {'reponse': 'Dark Vador', 'idEtu': 344322},
-#               {'reponse': 'Platon', 'idEtu': 125749}]
-#        }
-# }
+# Les données d'une séquence sont sous cette forme :
+
+#  'GAHisbh5': {
+#      'name': 'GAHisbh5',
+#      'enseignant':
+#      'GEBXTRQbmhZOTXqrAAAF',
+#      'etudiants': [{'id': 22100000, 'nom': 'donov zst'}],
+#      'questions': [],
+#      'derQuestionTraitee': objet de type question,
+#      'stopReponses': False,
+#      'reponsesEtudiant': [
+#          {'id': 22100000, 'question': 6, 'answer': 20},
+#          {'id': 22100000, 'question': 18, 'answer': [33]}
+#      ]
+#  }
 
 # Quand un nouvel utilisateur se connecte au socket
 def connect():
@@ -50,6 +50,7 @@ def disconnect():
             room_id = session["user"]["room"]
             del session["user"]["room"]
 
+            # Si l'enseignant a une séquence en cours
             if room_id and room_id in sequenceEnCours:
                 emit("renderSequenceEnd", to=room_id)
                 close_room(room_id)
@@ -102,15 +103,15 @@ def createRoom(sequence_id):
 
             # On crée une room dans le tableau des questions en cours de
             # diffusion avec toutes les informations utiles aux echanges de reponses et questions
-            sequenceEnCours[room_id] = {'name': room_id,
-                                        'enseignant': request.sid,
-                                        'etudiants': [],
-                                        "questions": [int(t[0]) for t in res],
-                                        "derQuestionTraitee": None,
-                                        "stopReponses": False,
-                                        "reponsesEtudiant": [],
-                                        "reponses": []
-                                        }
+            sequenceEnCours[room_id] = {
+                'name': room_id,
+                'enseignant': request.sid,
+                'etudiants': [],
+                "questions": [int(t[0]) for t in res],
+                "derQuestionTraitee": None,
+                "stopReponses": False,
+                "reponsesEtudiant": []
+            }
 
             # On demande au client d'afficher la page d'attente
             emit("renderSequenceInit", room_id, to=room_id)
@@ -232,3 +233,44 @@ def joinRoom(room_id):
 
         else:
             emit("error", "La room #" + room_id + " n'existe pas")
+
+
+# Quand un utilisateur soumet une réponse
+def submitAnswer(answer):
+    # Si l'utilisateur est un étudiant et qu'il une séquence en session
+    if 'user' in session and session["user"]["type"] == "Etudiant" and 'room' in session["user"]:
+        room_id = session["user"]["room"]
+
+        # Si la séquence existe
+        if room_id in sequenceEnCours:
+
+            # Si l'utilisateur a déjà répondu → Erreur
+            if any(
+                    answer["id"] == session["user"]["id"] and
+                    answer["question"] == sequenceEnCours[room_id]["derQuestionTraitee"]["id"]
+                    for answer in sequenceEnCours[room_id].get("reponsesEtudiant", [])
+            ):
+                emit("error", "Vous avez déjà répondu à la question")
+            else:
+                # On ajoute la réponse de l'étudiant
+                sequenceEnCours[room_id]["reponsesEtudiant"].append({
+                    "id": session["user"]["id"],
+                    "question": sequenceEnCours[room_id]["derQuestionTraitee"]["id"],
+                    "answer": answer
+                })
+                emit("renderSubmitButton", False, to=request.sid)
+
+                # Si c'est un QCM
+                if sequenceEnCours[room_id]["derQuestionTraitee"]["type"] == 0:
+
+                    # Pour chaque valeur, on émet un event
+                    for answerId in answer:
+                        emit("renderNewResponse", answerId, to=room_id)
+
+                else:
+                    emit("renderNewResponse", answer, to=room_id)
+
+        else:
+            emit("error", "La room #" + room_id + " n'existe pas")
+    else:
+        emit("error", "La room de l'utilisateur n'a pas pu être trouvée")
