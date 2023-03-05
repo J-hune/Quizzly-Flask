@@ -46,8 +46,8 @@ def getQuestions(enseignant, etiquettes):
                 "enonce": result[i][1],
                 "etiquettes": fonctionLabels.getLiensEtiquettes(result[i][0]),
                 "reponses": getReponses(result[i][0]),
-                "type": result[i][2],
-                "numerique": result[i][3]
+                "type": result[i][3],
+                "numerique": result[i][4]
             }
             data.append(dico)
 
