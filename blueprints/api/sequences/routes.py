@@ -8,7 +8,7 @@ sequences = Blueprint('sequences', __name__, url_prefix='/sequences')
 # Route pour insérer une Sequence
 @sequences.route('/addSequence', methods=['POST'])
 def addSequence():
-    # Si il est en session
+    # S'il est en session
     if 'user' in session:
 
         # Si c'est un enseignant
@@ -91,7 +91,7 @@ def editSequence(id):
 # Route pour supprimer une Séquence
 @sequences.route('/removeSequence/<id>', methods=['GET'])
 def removeSequence(id):
-    # Si il est en session
+    # S'il est en session
     if 'user' in session:
         # Si c'est un enseignant
         if session["user"]["type"] == "Enseignant":
@@ -134,7 +134,7 @@ def removeSequence(id):
 
 @sequences.route("/getSequence/<id>", methods=["GET", "POST"])
 def getSequence(id):
-    # Si il est en session
+    # S'il est en session
     if 'user' in session:
         # Si c'est un enseignant
         if session["user"]["type"] == "Enseignant":
@@ -167,14 +167,10 @@ def getSequence(id):
             "reason": "Session non disponible"
         }), 400
 
-@sequences.route('/getStatistics>', methods=['GET'])
-def getSatisticsBySequence(id):
-    pass
-
 
 @sequences.route("/getAllSequences", methods=["GET"])
 def getAllSequences():
-    # Si il est en session
+    # S'il est en session
     if 'user' in session:
         # Si c'est un enseignant
         if session["user"]["type"] == "Enseignant":

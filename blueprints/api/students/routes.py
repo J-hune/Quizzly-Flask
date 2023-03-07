@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request, session
 
 import functions.users
 from functions.students import addStudent, removeStudent
+from functions.sequences import getLastSequences
+
 
 students = Blueprint('student', __name__, url_prefix='/students')
 
@@ -151,7 +153,7 @@ def editAvatar():
                     "reason": "Edit d'avatar impossible"
                 }), 400
 
-        # Ce n'est pas un enseignant
+        # Ce n'est pas un étudiant
         else:
             return jsonify({
                 "status": 403,
@@ -162,4 +164,34 @@ def editAvatar():
         return jsonify({
             "status": 400,
             "reason": "Ajout des données impossible"
+        }), 400
+
+
+# Route qui récupère les 3 dernières participations d'un élève
+@students.route('/getLastSequences', methods=['GET'])
+def getLastSequences():
+    if 'user' in session:
+        # Si c'est un étudiant
+        if session["user"]["type"] == "Etudiant":
+            user = session.get("user")
+            sequences = functions.sequences.getLastSequences(user["id"])
+            if sequences:
+                return jsonify(sequences)
+            # Si l'étudiant n'a participé à aucune séquence
+            else:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Récupération des données impossible"
+                }), 400
+        # Ce n'est pas un étudiant
+        else:
+            return jsonify({
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
+    # Sinon pas en session
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Récupération des données impossible"
         }), 400

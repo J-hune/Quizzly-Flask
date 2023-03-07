@@ -217,33 +217,61 @@ def getAllSequences(idEnseignant):
         return False
 
 
-def getStatisticsBySequence(sequenceId):
+# Renvoie les 3 dernières diffusions auxquelles un étudiant a participé
+# Param : id de l'étudiant
+# Return : les trois dernières diffusions de l'étudiant (tab de dico)
+#               [{"id":7,                           (--> id de la séquence qui a été diffusé)
+#                 "enseignant":"Michel Staelens",
+#                 "participants":25,
+#                 "pourcentage":"82,7",             (--> pourcentage de réussite de l'étudiant)
+#                 "date":07032023
+#                 }, ...]
+def getLastSequences(id):
     try:
         # Connection à la table
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
-        #                                                   nbParticipant              nbRéponse    nbBonneRéponse      premièreRéponse (date début)
-        result = cursor.execute("SELECT E.prenom, E.nom, COUNT(DISTINCT A.etudiant), COUNT(A.id), SUM(A.est_correcte), MIN(A.date) \
-                        FROM Sequences S \
-                        JOIN Enseignants E ON S.enseignant = E.id \
-                        JOIN Archives A ON S.id = A.diffusion \
-                        WHERE S.id = ? ",(sequenceId,))
-        result = result.fetchone()
 
-        data = {"enseignant": result[0] + " " + result[1],
-                "nbParticipant": result[2],
-                "pourcentageReussite": ((result[4] / result[3])*100),
-                "date": result[5],
-                "id": sequenceId}
-        print(data)
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
+        # Récupère l'id des 3 dernières séquences participé, le nom/prénom du prof et le pourcentage de bonne réponse
+        #                                                                   nbRéponse     nbBonneRéponse
+        result = cursor.execute("SELECT AD.id, AD.mode, E.prenom, E.nom, COUNT(AR.id), SUM(AR.est_correcte), AD.date \
+                                            FROM ArchivesDiffusions AD \
+                                            JOIN ArchivesReponses AR ON AD.id = AR.diffusion \
+                                            JOIN Enseignants E ON AD.enseignant = E.id \
+                                            JOIN Sequences S ON AD.mode = S.id \
+                                            WHERE AR.etudiant = ? \
+                                            GROUP BY AD.id \
+                                            ORDER BY AD.date DESC LIMIT 3;", (id,))
+        result = result.fetchall()
+
+        tab = []
+        for i in range(len(result)):
+            # Récupère le nombre de participants à la diffusion
+            nb_participant = cursor.execute("SELECT COUNT(DISTINCT AR.etudiant) \
+                                            FROM ArchivesDiffusions AD \
+                                            JOIN ArchivesReponses AR ON AD.id = AR.diffusion \
+                                            WHERE AD.id = ? \
+                                            GROUP BY AD.id;", (result[i][0],))
+            nb_participant = nb_participant.fetchone()
+
+            # Range les données dans un dico
+            data = {"id": result[i][1],
+                    "enseignant": result[i][2] + " " + result[i][3],
+                    "participants": nb_participant[0],
+                    "pourcentage": ((result[i][5] / result[i][4])*100),
+                    "date": result[i][6]
+                    }
+            tab.append(data)
+
         # Fermeture de la connection
         cursor.close()
         conn.close()
 
-        return result
+        return tab
 
     except sqlite3.Error as error:
-        print("Échec de la sélection de l'élément dans la table sqlite :", error)
+        print("Une erreur est survenue lors de la sélection des séquences :", error)
         return False
-
-getStatisticsBySequence(1)
