@@ -77,16 +77,17 @@ def addLabel(nomLabel, couleur, userID):
             cur = con.cursor()
 
             # Active les clés étrangères
-            cursor.execute("PRAGMA foreign_keys = ON")
+            cur.execute("PRAGMA foreign_keys = ON")
 
             sql = "INSERT INTO Etiquettes ('nom','couleur','enseignant') VALUES(?,?,?);"
             value = (nomLabel, couleur, userID)
             cur.execute(sql, value)
             con.commit()
+            last_row_id = cur.lastrowid
 
             cur.close()
             con.close()
-            return True
+            return last_row_id
 
         except sqlite3.Error as error:
             print("Une erreur est survenue lors de la création de l'étiquette : ", error)
@@ -127,7 +128,7 @@ def getLiensEtiquettes(questionId):
     cur = con.cursor()
 
     # Active les clés étrangères
-    cursor.execute("PRAGMA foreign_keys = ON")
+    cur.execute("PRAGMA foreign_keys = ON")
 
     res = cur.execute("""SELECT nom, couleur FROM Etiquettes
                     JOIN liensEtiquettesQuestions ON Etiquettes.id = liensEtiquettesQuestions.etiquette 

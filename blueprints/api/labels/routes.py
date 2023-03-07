@@ -42,8 +42,13 @@ def addLabel(name, hexa):
     if 'user' in session:
         user = session.get("user")
         # Si l'ajout de l'étiquette a réussi
-        if fonctionLabels.addLabel(name, hexa, user["id"]):
-            return jsonify(success=True), 200
+        label_id = fonctionLabels.addLabel(name, hexa, user["id"])
+
+        if label_id:
+            return jsonify({
+                "success": True,
+                "id": label_id
+            }), 200
         else:
             return jsonify({
                 "status": 401,
