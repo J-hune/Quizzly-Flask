@@ -1,25 +1,5 @@
 import sqlite3
 
-
-# Retourne tous les labels que l'enseignant utilise
-def getLabelsUsed(userId):
-    con = sqlite3.connect('database.db')
-    cur = con.cursor()
-
-    sql = ("SELECT DISTINCT e.nom, e.couleur FROM Etiquettes e\n" +
-           " JOIN liensEtiquettesQuestions leq ON e.id = leq.etiquette\n"
-           " JOIN Questions q ON leq.question = q.id\n"
-           " WHERE q.enseignant = ?"
-           )
-
-    res = cur.execute(sql, (userId,))
-    res = res.fetchall()
-    cur.close()
-    con.close()
-
-    return res
-
-
 # Récupère toutes les étiquettes d'un enseignant
 # Param : id de l'enseignant (int)
 # Return : les étiquettes de l'enseignant (tab de dico)

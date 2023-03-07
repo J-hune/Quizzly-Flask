@@ -11,7 +11,7 @@ def getLabels():
         user = session.get("user")
 
         # Récupération des étiquettes sous la forme [["nom", "couleur_en_hexa"],...]
-        labels = fonctionLabels.getLabelsUsed(user['id'])
+        labels = fonctionLabels.getLabels(user['id'])
         return jsonify(labels)
     else:
         return jsonify({
