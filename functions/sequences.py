@@ -274,4 +274,4 @@ def getLastSequences(id):
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la sélection des séquences :", error)
-        return False
+        return 0

@@ -175,14 +175,14 @@ def getLastSequences():
         if session["user"]["type"] == "Etudiant":
             user = session.get("user")
             sequences = functions.sequences.getLastSequences(user["id"])
-            if sequences:
+            if sequences != 0:
                 return jsonify(sequences)
             # Si l'étudiant n'a participé à aucune séquence
             else:
                 return jsonify({
-                    "status": 400,
-                    "reason": "Récupération des données impossible"
-                }), 400
+            "status": 400,
+            "reason": "Récupération des données impossible"
+        }), 400
         # Ce n'est pas un étudiant
         else:
             return jsonify({
