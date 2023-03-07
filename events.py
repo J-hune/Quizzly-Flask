@@ -167,6 +167,9 @@ def askCorrection():
         # Si la séquence existe
         if room_id in sequenceEnCours:
             question = sequenceEnCours[room_id]["derQuestionTraitee"]
+            sequenceEnCours[room_id]["stopReponses"] = True
+
+            emit("renderSubmitButton", False, to=room_id)
 
             # Si la question est de type "QCM"
             if question['type'] == 0:
