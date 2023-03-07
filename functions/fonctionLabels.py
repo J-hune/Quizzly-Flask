@@ -30,6 +30,9 @@ def getLabels(id):
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
         # Récupère les étiquettes dans la table
         result = cursor.execute("SELECT Etiquettes.id, Etiquettes.nom, Etiquettes.couleur FROM Etiquettes WHERE enseignant = ?;", (id,))
         result = result.fetchall()
@@ -93,6 +96,9 @@ def addLabel(nomLabel, couleur, userID):
             con = sqlite3.connect('database.db')
             cur = con.cursor()
 
+            # Active les clés étrangères
+            cursor.execute("PRAGMA foreign_keys = ON")
+
             sql = "INSERT INTO Etiquettes ('nom','couleur','enseignant') VALUES(?,?,?);"
             value = (nomLabel, couleur, userID)
             cur.execute(sql, value)
@@ -134,42 +140,14 @@ def editLabel(id, nom, couleur):
         return False
 
 
-# Ajoute les liens entre la question et les étiquettes
-# pré-requis on a la question et l'étiquette dans la BDD
-# Fonction migrée vers question.py en addLinksQuestionLabels /!\ À GARDER POUR LE MOMENT /!\
-"""def addLiensEtiquettesQuestions(etiquette, question, userID):
-    try:
-        con = sqlite3.connect('database.db')
-        cur = con.cursor()
-
-        sql = 'SELECT id FROM Etiquettes WHERE nom=? AND enseignant=?'
-        value = (etiquette, userID)
-        res = cur.execute(sql, value)
-        res = res.fetchall()
-        if len(res) != 0 or len(res[0]) != 0:
-
-            sql = 'INSERT INTO liensEtiquettesQuestions VALUES(?,?)'
-            value = (question, res[0][0])
-            cur.execute(sql, value)
-            con.commit()
-            cur.close()
-            con.close()
-            return True
-        else:
-            cur.close()
-            con.close()
-            return False
-
-    except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question : ", error)
-        return False"""
-
-
 # Fonction qui récupère les données des étiquettes associées a une question
 # et les renvoie sous forme de dico {"nom": ... , "couleur": ...}
 def getLiensEtiquettes(questionId):
     con = sqlite3.connect('database.db')
     cur = con.cursor()
+
+    # Active les clés étrangères
+    cursor.execute("PRAGMA foreign_keys = ON")
 
     res = cur.execute("""SELECT nom, couleur FROM Etiquettes
                     JOIN liensEtiquettesQuestions ON Etiquettes.id = liensEtiquettesQuestions.etiquette 
@@ -185,9 +163,10 @@ def getLiensEtiquettes(questionId):
     return data
 
 
-# @Unused
-# Supprime une étiquette
-# Param : l'id de l'étiquette
+# Supprime une étiquette (que si elle n'est liée à aucune question)
+# Param : l'id de l'étiquette (int)
+# Return : - True si réussite
+#          - False si échec ou si étiquette liée
 def deleteLabel(id):
     try:
         # Connection à la BDD
@@ -197,14 +176,23 @@ def deleteLabel(id):
         # Active les clés étrangères
         cursor.execute("PRAGMA foreign_keys = ON")
 
-        # Insertion des données dans la table
-        cursor.execute("DELETE FROM Etiquettes WHERE id = ?;", (id,))
-        conn.commit()
+        # Récupère les liens de l'étiquette avec des éventuelles questions
+        result = cursor.execute("SELECT * FROM liensEtiquettesQuestions WHERE etiquette = ?;", (id,))
+        result = result.fetchone()
+
+        check = False
+
+        # Si l'étiquette n'est pas liée, suppression de l'étiquette dans la table et on renvoie True
+        if result is None:
+            check = True
+            cursor.execute("DELETE FROM Etiquettes WHERE id = ?;", (id,))
+            conn.commit()
 
         # Fermeture de la connection
         cursor.close()
         conn.close()
-        return True
+
+        return check
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la suppression de l'étiquette la table sqlite : ", error)

@@ -76,3 +76,24 @@ def editLabel():
             "status": 400,
             "reason": "Session non disponible"
         }), 400
+
+
+# Route pour supprimer une étiquette
+# Reçoit en GET un id d'étiquette
+@label.route('/deleteLabel/<id>', methods=['GET'])
+def deleteLabel(id):
+    # Vérification que l'utilisateur est en session
+    if 'user' in session:
+        # Réussite de la suppression de l'étiquette
+        if fonctionLabels.deleteLabel(id):
+            return jsonify(success=True), 200
+        else:
+            return jsonify({
+                "status": 401,
+                "reason": "Impossible de supprimer l'étiquette"
+            }), 401
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Session non disponible"
+        }), 400
