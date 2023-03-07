@@ -21,7 +21,7 @@ def getLabelsUsed(userId):
 
 
 # Récupère toutes les étiquettes d'un enseignant
-# Param : id de l'enseignant
+# Param : id de l'enseignant (int)
 # Return : les étiquettes de l'enseignant (tab de dico)
 #            [{"id":666, "nom":"Modèle de calcul", "couleur":"FF0000"}, {...}, ...]
 def getLabels(id):
@@ -106,6 +106,31 @@ def addLabel(nomLabel, couleur, userID):
             print("Une erreur est survenue lors de la création de l'étiquette : ", error)
             return False
     else:
+        return False
+
+
+# Modifie une étiquette
+# Param : - id : id de l'étiquette (int)
+#         - nom : nom de l'étiquette (string)
+#         - couleur : couleur de l'étiquette (string)
+def editLabel(id, nom, couleur):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Modifie l'étiquette dans la table
+        cursor.execute("UPDATE Etiquettes SET nom = ?, couleur = ? WHERE id = ?;", (nom, couleur, id))
+        conn.commit()
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+
+        return True
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la modification de l'étiquette : ", error)
         return False
 
 
