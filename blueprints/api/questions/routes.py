@@ -25,7 +25,6 @@ def getQuestions(label=None):
 def getQuestion(id):
     # Vérification que l'utilisateur est en session
     if 'user' in session:
-        user = session.get("user")
         question = functionQuestions.getQuestion(id)
         if not question:
             return jsonify({
