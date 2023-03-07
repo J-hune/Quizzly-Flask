@@ -20,45 +20,38 @@ def getLabelsUsed(userId):
     return res
 
 
-# Retourne tous les labels de l'enseignant
-def getLabels(userId):
-    con = sqlite3.connect('database.db')
-    cur = con.cursor()
+# Récupère toutes les étiquettes d'un enseignant
+# Param : id de l'enseignant
+# Return : les étiquettes de l'enseignant (tab de dico)
+#            [{"id":666, "nom":"Modèle de calcul", "couleur":"FF0000"}, {...}, ...]
+def getLabels(id):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
-    sql = ("\n"
-           "    SELECT Etiquettes.nom, Etiquettes.couleur FROM Etiquettes\n"
-           "        WHERE enseignant = ?")
+        # Récupère les étiquettes dans la table
+        result = cursor.execute("SELECT Etiquettes.id, Etiquettes.nom, Etiquettes.couleur FROM Etiquettes WHERE enseignant = ?;", (id,))
+        result = result.fetchall()
 
-    res = cur.execute(sql, (userId,))
-    res = res.fetchall()
-    cur.close()
-    con.close()
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
 
-    return res
+        # Range les données dans un tableau de dictionnaires
+        data = []
+        for i in range(len(result)):
+            dico = {
+                "id": result[i][0],
+                "nom": result[i][1],
+                "couleur": result[i][2]
+            }
+            data.append(dico)
 
+        return data
 
-# Supprime l'étiquette donnée en paramètre dans la base de donnée
-# Non utilisé dans notre cas
-def supprLabel(nomLabel):
-    if searchLabel(nomLabel):
-        try:
-            con = sqlite3.connect('database.db')
-            cur = con.cursor()
-
-            sql = 'DELETE FROM Etiquettes WHERE nom = ?'
-            cur.execute(sql, (nomLabel,))
-            con.commit()
-            print("L'étiquette a été supprimée !")
-
-            cur.close()
-            con.close()
-            return True
-
-
-        except sqlite3.Error as error:
-            print("Une erreur est survenue lors de la suppression !", error)
-            return False
-    else:
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélection des étiquettes : ", error)
         return False
 
 
@@ -167,9 +160,9 @@ def getLiensEtiquettes(questionId):
     return data
 
 
+# @Unused
 # Supprime une étiquette
 # Param : l'id de l'étiquette
-# @Unused
 def deleteLabel(id):
     try:
         # Connection à la BDD
