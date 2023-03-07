@@ -10,23 +10,7 @@ def getLabels():
     if 'user' in session:
         user = session.get("user")
 
-        # Récupération des étiquettes sous la forme [["nom", "couleur_en_hexa"],...]
-        labels = fonctionLabels.getLabels(user['id'])
-        return jsonify(labels)
-    else:
-        return jsonify({
-            "status": 400,
-            "reason": "Session non disponible"
-        }), 400
-
-
-@label.route('/getAllLabels', methods=['GET'])
-def getAllLabels():
-    # Vérification que l'utilisateur est en session
-    if 'user' in session:
-        user = session.get("user")
-
-        # Récupération des étiquettes sous la forme [["nom", "couleur_en_hexa"],...]
+        # Récupération des étiquettes sous la forme [{"id":4, "nom":"Algo", "couleur":"000000"}, ...]
         labels = fonctionLabels.getLabels(user['id'])
         return jsonify(labels)
     else:
