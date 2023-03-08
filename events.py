@@ -14,8 +14,8 @@ sequenceEnCours = {}  # Les données de ce tableau peuvent servir pour les stats
 
 #  'GAHisbh5': {
 #      'name': 'GAHisbh5',
-#      'enseignant':
-#      'GEBXTRQbmhZOTXqrAAAF',
+#      'enseignant': 'GEBXTRQbmhZOTXqrAAAF',
+#      'mode': 'sequence', (ou 'question')
 #      'etudiants': [{'id': 22100000, 'nom': 'donov zst'}],
 #      'questions': [],
 #      'derQuestionTraitee': objet de type question,
@@ -110,6 +110,7 @@ def createRoomSequence(sequence_id):
             sequenceEnCours[room_id] = {
                 'name': room_id,
                 'enseignant': request.sid,
+                'mode': 'sequence',
                 'etudiants': [],
                 "questions": [int(t[0]) for t in res],
                 "derQuestionTraitee": None,
@@ -148,6 +149,7 @@ def nextQuestion():
 
             emit("renderQuestion", {
                 "question": question,
+                "mode": sequenceEnCours[room_id]["mode"],
                 "last": len(sequenceEnCours[room_id]["questions"]) < 1
             }, to=room_id)
 
@@ -233,6 +235,7 @@ def joinRoom(room_id):
 
                 emit("renderQuestion", {
                     "question": question,
+                    "mode": sequenceEnCours[room_id]["mode"],
                     "last": len(sequenceEnCours[room_id]["questions"]) < 1
                 }, to=request.sid)
 
@@ -299,6 +302,7 @@ def createRoomQuestion(question_id):
         sequenceEnCours[room_id] = {
             'name': room_id,
             'enseignant': request.sid,
+            'mode': 'question',
             'etudiants': [],
             "questions": [question_id],
             "derQuestionTraitee": None,
