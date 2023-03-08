@@ -2,8 +2,8 @@ from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from blueprints.api.routes import api
-from events import connect, disconnect, createRoom, askCorrection, nextQuestion, askStopResponses, joinRoom, \
-    submitAnswer
+from events import connect, disconnect, createRoomSequence, askCorrection, nextQuestion, askStopResponses, joinRoom, \
+    submitAnswer, createRoomQuestion
 
 app = Flask(__name__)
 app.register_blueprint(api)
@@ -26,7 +26,8 @@ socketio.on_event('connect', connect)
 socketio.on_event('disconnect', disconnect)
 
 # Events Enseignants
-socketio.on_event('createRoom', createRoom)
+socketio.on_event('createRoomSequence', createRoomSequence)
+socketio.on_event('createRoomQuestion', createRoomQuestion)
 socketio.on_event('nextQuestion', nextQuestion)
 socketio.on_event('askCorrection', askCorrection)
 socketio.on_event('askStopResponses', askStopResponses)

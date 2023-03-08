@@ -78,7 +78,7 @@ def disconnect():
 
 
 # Quand un enseignant lance une séquence
-def createRoom(sequence_id):
+def createRoomSequence(sequence_id):
     if 'user' in session and session["user"]["type"] == "Enseignant":
 
         # On récupère les questions liées à la séquence
@@ -281,3 +281,30 @@ def submitAnswer(answer):
             emit("error", "La room #" + room_id + " n'existe pas")
     else:
         emit("error", "La room de l'utilisateur n'a pas pu être trouvée")
+
+
+# Quand un enseignant lance une question sans passer par une séquence
+def createRoomQuestion(question_id):
+    if 'user' in session and session["user"]["type"] == "Enseignant":
+
+        # Génération de l'id de la room :
+        room_id = generateCode()
+
+        # Le client est mis dans la room
+        join_room(room_id)
+        session["user"]["room"] = room_id
+
+        # On crée une room dans le tableau des questions en cours de
+        # diffusion avec toutes les informations utiles aux echanges de reponses et questions
+        sequenceEnCours[room_id] = {
+            'name': room_id,
+            'enseignant': request.sid,
+            'etudiants': [],
+            "questions": [question_id],
+            "derQuestionTraitee": None,
+            "stopReponses": False,
+            "reponsesEtudiant": []
+        }
+
+        # On demande au client d'afficher la page d'attente
+        emit("renderSequenceInit", room_id, to=room_id)
