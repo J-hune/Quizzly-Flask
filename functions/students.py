@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash
 #           [{"id" : 1332214, "nom":"DeLaTour", "prenom":"Jean"},
 #            {"id" : 1322324, "nom":"DeLaTour", "prenom":"Jeanne"}, ...
 #           ]
+# Return : le nombre d'étudiants ajoutés dans la BDD (int)
 def addStudent(students):
     nb_student_added = 0
 
@@ -40,6 +41,7 @@ def addStudent(students):
         except sqlite3.Error as error:
             print("Une erreur est survenue lors de l'ajout des étudiants :", error)
             return -1
+
     return nb_student_added
 
 
@@ -101,7 +103,7 @@ def getAllStudents():
         cursor.execute("SELECT Etudiants.id, Etudiants.nom, Etudiants.prenom, Etudiants.avatar FROM Etudiants;")
         result = cursor.fetchall()
 
-        # Ordonne les données dans un dico
+        # Ordonne les données dans un tableau de dico
         data = []
         for i in range(len(result)):
             dico = {
