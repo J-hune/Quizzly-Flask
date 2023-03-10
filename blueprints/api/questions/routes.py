@@ -87,29 +87,6 @@ def addQuestion():
         }), 400
 
 
-# Route qui permet l'ajout de nouvelles réponses
-@questions.route('/addReponses', methods=['POST'])
-def addReponses():
-    # Je suis parti du principe que data est de cette forme {"type":1, "question" : 2, "reponse" : "Non", "reponseJuste" : 0}
-    data = request.get_json(force=True)
-
-    # Vérifie si on a nos données
-    if not (data["question"] and data["reponse"] and data["reponseJuste"]):
-        return jsonify({
-            "status": 400,
-            "reason": "First Name, Surname or Password Incomplete"
-        }), 400
-
-    # La fonction renvoie True si elle a ajouté dans la table et False sinon
-    if functionQuestions.addReponse(data["reponse"], data["reponseJuste"], data["question"]):
-        return jsonify(success=True), 200
-    else:
-        return jsonify({
-            "status": 400,
-            "reason": "Insertion impossible dans la base de donnée"
-        }), 400
-
-
 # Route qui permet de supprimer une question
 @questions.route('/deleteQuestion/<id>', methods=['GET'])
 def deleteQuestion(id):
