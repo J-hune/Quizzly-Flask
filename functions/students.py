@@ -2,13 +2,13 @@ import sqlite3
 from werkzeug.security import generate_password_hash
 
 
-# Ajoute les étudiants en paramètre dans la base de donnée
+# Ajoute les étudiants en paramètre dans la BDD
 # Param : tableau d'étudiant sous cette forme
 #           [{"id" : 1332214, "nom":"DeLaTour", "prenom":"Jean"},
 #            {"id" : 1322324, "nom":"DeLaTour", "prenom":"Jeanne"}, ...
 #           ]
 def addStudent(students):
-    nbStudentAdded = 0
+    nb_student_added = 0
 
     # Pour chaque étudiant
     for i in range(len(students)):
@@ -18,30 +18,29 @@ def addStudent(students):
             cursor = conn.cursor()
 
             # Chiffrage du mot de passe
-            hashedPassword = generate_password_hash(students[i]["id"], 'sha256')
+            hashed_password = generate_password_hash(students[i]["id"], 'sha256')
 
-            # Insertion des données dans la table
-            sql = "INSERT or IGNORE INTO Etudiants (id, nom, prenom, mdp) VALUES (?, ?, ?, ?);"
-            data = (students[i]["id"],
-                    students[i]["nom"],
-                    students[i]["prenom"],
-                    hashedPassword)
-            cursor.execute(sql, data)
+            # Insertion de l'étudiant
+            cursor.execute("INSERT or IGNORE INTO Etudiants (id, nom, prenom, mdp) VALUES (?, ?, ?, ?);",
+                           (students[i]["id"],
+                            students[i]["nom"],
+                            students[i]["prenom"],
+                            hashed_password))
             conn.commit()
 
             # Si le dernier élément inséré a le même id que l'étudiant actuel, l'étudiant a réellement été ajouté,
             # sinon l'étudiant était donc déjà dans la BDD
             if cursor.lastrowid == int(students[i]["id"]):
-                nbStudentAdded += 1
+                nb_student_added += 1
 
             # Fermeture de la connection
             cursor.close()
             conn.close()
 
         except sqlite3.Error as error:
-            print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
+            print("Une erreur est survenue lors de l'ajout des étudiants :", error)
             return -1
-    return nbStudentAdded
+    return nb_student_added
 
 
 # Retourne les informations sur l'étudiant en paramètre
@@ -78,7 +77,7 @@ def getStudent(id):
         return dico
 
     except sqlite3.Error as error:
-        print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
+        print("Une erreur est survenue lors de la sélection de l'étudiant :", error)
         return False
 
 
@@ -93,42 +92,50 @@ def getStudent(id):
 #              }, ...
 #           ]
 def getAllStudents():
-    # Connection à la BDD
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
-    # Récupère l'id, le nom, le prénom et l'avatar de chaque étudiant dans la BDD
-    cursor.execute("SELECT Etudiants.id, Etudiants.nom, Etudiants.prenom, Etudiants.avatar FROM Etudiants;")
-    result = cursor.fetchall()
+        # Récupère l'id, le nom, le prénom et l'avatar de chaque étudiant dans la BDD
+        cursor.execute("SELECT Etudiants.id, Etudiants.nom, Etudiants.prenom, Etudiants.avatar FROM Etudiants;")
+        result = cursor.fetchall()
 
-    data = []
-    for i in range(len(result)):
-        dico = {
-            "id": result[i][0],
-            "nom": result[i][1],
-            "prenom": result[i][2],
-            "avatar": result[i][3]
-        }
-        data.append(dico)
+        # Ordonne les données dans un dico
+        data = []
+        for i in range(len(result)):
+            dico = {
+                "id": result[i][0],
+                "nom": result[i][1],
+                "prenom": result[i][2],
+                "avatar": result[i][3]
+            }
+            data.append(dico)
 
-    # Fermeture de la connection
-    cursor.close()
-    conn.close()
-    return data
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return data
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélection des étudiants :", error)
+        return False
 
 
 # Modifie le mot de passe d'un étudiant
+# Param : - id : id de l'étudiant (int)
+#         - password : nouveau mot de passe de l'étudiant (string)
 def changePassword(id, password):
     try:
         # On chiffre le mot de passe
-        hashedPassword = generate_password_hash(password, 'sha256')
+        hashed_password = generate_password_hash(password, 'sha256')
 
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
         # Mise à jour des données dans la table
-        cursor.execute("UPDATE Etudiants SET mdp = ? WHERE id = ?;", (hashedPassword, id))
+        cursor.execute("UPDATE Etudiants SET mdp = ? WHERE id = ?;", (hashed_password, id))
         conn.commit()
 
         # Fermeture de la connection
@@ -137,11 +144,13 @@ def changePassword(id, password):
         return True
 
     except sqlite3.Error as error:
-        print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
+        print("Une erreur est survenue lors de la modification du mot de passe :", error)
         return False
 
 
 # Modifie l'avatar de l'étudiant en paramètre
+# Param : - id : id de l'étudiant (int)
+#         - avatar : nouvel avatar de l'étudiant (string)
 def editAvatar(id, avatar):
     try:
         # Connection à la BDD
@@ -158,11 +167,12 @@ def editAvatar(id, avatar):
         return True
 
     except sqlite3.Error as error:
-        print("Échec de l'insertion de la variable Python dans la table sqlite : ", error)
+        print("Une erreur est survenue lors de la modification de l'avatar :", error)
         return False
 
 
 # Retourne l'avatar de l'étudiant en paramètre
+# Param : id de l'étudiant (int)
 def getAvatar(id):
     try:
         # Connection à la BDD
@@ -170,7 +180,7 @@ def getAvatar(id):
         cursor = conn.cursor()
 
         # Mise à jour de la donnée dans la table
-        result = cursor.execute("SELECT avatar FROM Etudiants WHERE id = ?;", (id, ))
+        result = cursor.execute("SELECT avatar FROM Etudiants WHERE id = ?;", (id,))
         result = result.fetchone()
         conn.commit()
 
@@ -182,11 +192,12 @@ def getAvatar(id):
         return False
 
     except sqlite3.Error as error:
-        print("Échec de la selection de la variable Python dans la table sqlite : ", error)
+        print("Une erreur est survenue lors de la sélection de l'avatar :", error)
         return False
 
 
 # Supprime l'étudiant en paramètre de la BDD
+# Param : id de l'étudiant (int)
 # Return : 0 si réussite
 #          1 si échec de la requête
 #          2 si l'étudiant n'est pas trouvé
@@ -211,7 +222,7 @@ def removeStudent(id):
             return 0
 
         except sqlite3.Error as error:
-            print("Échec de la suppression de l'élément dans la table sqlite : ", error)
+            print("Une erreur est survenue lors de la suppresion de l'étudiant :", error)
             return 1
     else:
         return 2
@@ -237,5 +248,5 @@ def removeAllStudents():
         return True
 
     except sqlite3.Error as error:
-        print("Échec de la suppression de l'élément dans la table sqlite", error)
+        print("Une erreur est survenue lors de la suppression de tous les étudiants :", error)
         return False
