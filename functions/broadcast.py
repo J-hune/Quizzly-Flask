@@ -4,16 +4,25 @@ import random
 
 
 # Vérifie si le code existe déjà dans la BDD
+# Param : - cursor : le cursor de la BDD
+#         - code : le code alphanumérique généré (string)
+# Return : True si code existe déjà sinon False
 def codeAlreadyExists(cursor, code):
-    cursor.execute("SELECT id FROM Codes WHERE id=?;", (code,))
-    result = cursor.fetchone()
-    return result is not None
+    try:
+        cursor.execute("SELECT id FROM Codes WHERE id=?;", (code,))
+        result = cursor.fetchone()
+        return result is not None
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélection du code :", error)
+        return False
 
 
 # Génère un code de 8 caractères alphanumérique qui n'est pas encore utilisé
+# Return : le code alphanumérique (string)
 def generateCode():
     try:
-        # Connection à la table
+        # Connection à la BDD
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
 
@@ -34,16 +43,15 @@ def generateCode():
         return code
 
     except sqlite3.Error as error:
-        print("Échec de l'insertion de l'élément dans la table sqlite : ", error)
+        print("Une erreur est survenue lors de l'insertion du code :", error)
         return False
 
-    # Supprime un code de la BDD
 
-
-# Libère le code
+# Libère le code (le supprime de la BDD)
+# Param : le code à libérer (string)
 def deleteCode(code):
     try:
-        # Connection à la table
+        # Connection à la BDD
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
 
@@ -57,5 +65,5 @@ def deleteCode(code):
         return True
 
     except sqlite3.Error as error:
-        print("Échec de la suppression de l'élément dans la table sqlite : ", error)
+        print("Une erreur est survenue lors de la suppression du code :", error)
         return False
