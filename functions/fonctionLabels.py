@@ -1,7 +1,9 @@
 import sqlite3
 
 
-# Récupère l'étiquette avec le nom (permet aussi de vérifier si cette étiquette existe)
+# Récupère une étiquette avec le nom (permet aussi de vérifier si cette étiquette existe)
+# Param : nom de l'étiquette (string)
+# Return : les infos de l'étiquette (tuple)
 def searchLabel(nom):
     try:
         # Connection à la BDD
@@ -31,7 +33,7 @@ def searchLabel(nom):
 # Param : - nom : nom de l'étiquette (string)
 #         - couleur : couleur de l'étiquette en hexa (string)
 #         - id_enseignant : id du créateur de l'étiquette (int)
-# Return : l'id de l'étiquette ajoutée ou False si une étiquette avec le même nom existe déjà ou si erreur
+# Return : l'id de l'étiquette ajoutée (int) ou False si une étiquette avec le même nom existe déjà ou si erreur
 def addLabel(nom, couleur, id_enseignant):
     if not searchLabel(nom):
         try:
@@ -86,6 +88,42 @@ def editLabel(id, nom, couleur):
         return False
 
 
+# Supprime une étiquette (que si elle n'est liée à aucune question)
+# Param : l'id de l'étiquette (int)
+# Return : - True si réussite
+#          - False si échec ou si étiquette liée
+def deleteLabel(id):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
+        # Récupère les liens de l'étiquette avec des éventuelles questions
+        result = cursor.execute("SELECT * FROM liensEtiquettesQuestions WHERE etiquette = ?;", (id,))
+        result = result.fetchone()
+
+        check = False
+
+        # Si l'étiquette n'est pas liée, suppression de l'étiquette dans la table et on renvoie True
+        if result is None:
+            check = True
+            cursor.execute("DELETE FROM Etiquettes WHERE id = ?;", (id,))
+            conn.commit()
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+
+        return check
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la suppression de l'étiquette :", error)
+        return False
+
+
 # Récupère toutes les étiquettes d'un enseignant
 # Param : id de l'enseignant (int)
 # Return : les étiquettes de l'enseignant (tab de dico)
@@ -121,42 +159,6 @@ def getLabels(id):
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la sélection des étiquettes :", error)
-        return False
-
-
-# Supprime une étiquette (que si elle n'est liée à aucune question)
-# Param : l'id de l'étiquette (int)
-# Return : - True si réussite
-#          - False si échec ou si étiquette liée
-def deleteLabel(id):
-    try:
-        # Connection à la BDD
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-
-        # Active les clés étrangères
-        cursor.execute("PRAGMA foreign_keys = ON")
-
-        # Récupère les liens de l'étiquette avec des éventuelles questions
-        result = cursor.execute("SELECT * FROM liensEtiquettesQuestions WHERE etiquette = ?;", (id,))
-        result = result.fetchone()
-
-        check = False
-
-        # Si l'étiquette n'est pas liée, suppression de l'étiquette dans la table et on renvoie True
-        if result is None:
-            check = True
-            cursor.execute("DELETE FROM Etiquettes WHERE id = ?;", (id,))
-            conn.commit()
-
-        # Fermeture de la connection
-        cursor.close()
-        conn.close()
-
-        return check
-
-    except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la suppression de l'étiquette :", error)
         return False
 
 
