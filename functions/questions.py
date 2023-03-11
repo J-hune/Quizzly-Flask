@@ -10,7 +10,7 @@ import functions.fonctionLabels as fonctionLabels
 #                           [ {"couleur": "000000", "nom": "musique"},
 #                             {"couleur": "FFFFFF", "nom": "ondes"}, ...
 #                           ]
-#         - enseignant : id du créateur de la question
+#         - enseignant : id du créateur de la question (int)
 def addLinksQuestionLabels(conn, cursor, id, etiquettes, enseignant):
     try:
         for i in range(len(etiquettes)):
@@ -21,7 +21,7 @@ def addLinksQuestionLabels(conn, cursor, id, etiquettes, enseignant):
             return True
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question : ", error)
+        print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question :", error)
         return False
 
 
@@ -48,7 +48,7 @@ def addReponses(conn, cursor, id, reponses):
         return True
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de l'insertion des réponses : ", error)
+        print("Une erreur est survenue lors de l'insertion des réponses :", error)
         return False
 
 
@@ -92,12 +92,12 @@ def addQuestion(question_type, enonce, enseignant, etiquettes, reponses, numeriq
         return True
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de l'insertion de la question : ", error)
+        print("Une erreur est survenue lors de l'insertion de la question :", error)
         return False
 
 
 # Retourne une question
-# Param : l'id de la question
+# Param : l'id de la question (int)
 # Return : un dico sous la forme suivante
 #               {
 #                 "id": 1,
@@ -139,12 +139,12 @@ def getQuestion(id):
         return data
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la sélecton de la question : ", error)
+        print("Une erreur est survenue lors de la sélection de la question :", error)
         return False
 
 
 # Récupère toutes les questions associées aux étiquettes (et leurs réponses) créées par un enseignant
-# Params : - userId : l'id de l'enseignant
+# Params : - enseignant : l'id de l'enseignant (int)
 #          - label : un tableau d'étiquettes (string)
 # Return : tableau de dico sous cette forme
 #           [
@@ -198,12 +198,12 @@ def getQuestions(enseignant, etiquettes):
         return data
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la sélecton des questions : ", error)
+        print("Une erreur est survenue lors de la sélecton des questions :", error)
         return False
 
 
 # Renvoie les réponses d'une question
-# Param : l'id de la question
+# Param : l'id de la question (int)
 # Return : un tableau de dico avec les réponses
 #           [{"id": 1, "reponse": "La réponse D", "reponseJuste": 1, "question": 1},...]
 def getReponses(id):
@@ -233,7 +233,7 @@ def getReponses(id):
         return data
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la sélection des réponses : ", error)
+        print("Une erreur est survenue lors de la sélection des réponses :", error)
         return False
 
 
@@ -286,12 +286,12 @@ def editQuestion(id, question_type, enonce, etiquettes, reponses, numerique):
         return True
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la modification de la question : ", error)
+        print("Une erreur est survenue lors de la modification de la question :", error)
         return False
 
 
 # Supprime une question
-# Param : id de la question
+# Param : id de la question (int)
 def deleteQuestion(id):
     try:
         # Connection à la BDD
@@ -310,5 +310,5 @@ def deleteQuestion(id):
         return True
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la suppression de la question : ", error)
+        print("Une erreur est survenue lors de la suppression de la question :", error)
         return False
