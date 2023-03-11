@@ -8,31 +8,32 @@ from functions.sequences import getLastSequences
 students = Blueprint('student', __name__, url_prefix='/students')
 
 
-# Route pour insérer un étudiant
+# Insère les étudiants
+# Param POST : un tableau avec les étudiants
+#               [{"id" : 1332214, "nom":"DeLaTour", "prenom":"Jean"},
+#                {"id" : 1322324, "nom":"DeLaTour", "prenom":"Jeanne"}, ...]
+# Return : le nombre d'étudiants inséré (int)
 @students.route('/insertStudents', methods=['POST'])
 def insertStudents():
-    # Si il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-
-        # Si c'est un enseignant
+        # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
             data = request.get_json(force=True)
 
-            # Renvoie -1 si on n'a pas réussi à insérer un étudiant, ou sinon le nombre d'étudiants réellement insérer
-            nbStudent = addStudent(data)
-
-            if nbStudent != -1:
-                return jsonify({"success": True, "result": nbStudent}), 200
+            nb_student = addStudent(data)
+            if nb_student != -1:
+                return jsonify({"success": True, "result": nb_student}), 200
             else:
                 return jsonify({
                     "status": 400,
-                    "reason": "Insert etudiant Invalid"
+                    "reason": "Échec de la requête"
                 }), 400
         # Ce n'est pas un enseignant
         else:
             return jsonify({
                 "status": 403,
-                "reason": "Forbidden"
+                "reason": "Permission non accordée"
             }), 403
     # Pas en session
     else:
@@ -42,39 +43,34 @@ def insertStudents():
         }), 400
 
 
-# Route pour supprimer un étudiant
+# Supprime un étudiant
+# Param GET : id de l'étudiant (int)
 @students.route('/removeStudent/<id>', methods=['GET'])
 def removeStudent(id):
-
-    # Si il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-
-        # Si c'est un enseignant
+        # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
 
-            # 0 si réussite
-            # 1 si mauvaise requête
-            # 2 si l'étudiant n'est pas trouvé
-            remove = functions.students.removeStudent(id)
-
-            if remove == 0:
+            check = functions.students.removeStudent(id)
+            if check == 0:
                 return jsonify(success=True), 200
-            elif remove == 2:
+            elif check == 2:
                 return jsonify({
                     "status": 400,
-                    "reason": "Etudiant not found"
+                    "reason": "L'étudiant n'existe pas"
                 }), 400
-            elif remove == 1:
+            elif check == 1:
                 return jsonify({
                     "status": 400,
-                    "reason": "Delete etudiant Invalid"
+                    "reason": "Échec de la requête"
                 }), 400
 
         # Ce n'est pas un enseignant
         else:
             return jsonify({
                 "status": 403,
-                "reason": "Forbidden"
+                "reason": "Permission non accordée"
             }), 403
     # Pas en session
     else:
@@ -84,28 +80,27 @@ def removeStudent(id):
         }), 400
 
 
-# Route pour supprimer tous les étudiants
+# Supprime tous les étudiants
 @students.route('/removeAllStudent/', methods=['GET'])
 def removeAllStudent():
-    # S'il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        # Si c'est un enseignant
+        # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
 
-            # Renvoie True si tout s'est bien passé
             if functions.students.removeAllStudents():
                 return jsonify(success=True), 200
             else:
                 return jsonify({
                     "status": 400,
-                    "reason": "Delete etudiant Invalid"
+                    "reason": "Échec de la requête"
                 }), 400
 
         # Ce n'est pas un enseignant
         else:
             return jsonify({
                 "status": 403,
-                "reason": "Forbidden"
+                "reason": "Permission non accordée"
             }), 403
     # Sinon pas en session
     else:
@@ -115,11 +110,21 @@ def removeAllStudent():
         }), 400
 
 
+# Récupère tous les étudiants
+# Return : tableau de dico d'étudiant sous la forme suivante
+#            [
+#              {
+#                "id": 42,
+#                "prenom": "John",
+#                "nom": "Smith",
+#                "avatar": "data:image/png;base64,iVBORw0KGgo..."
+#               }, ...
+#            ]
 @students.route('/getAllStudents', methods=['GET'])
 def getAllStudents():
-    # S'il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        # Si c'est un enseignant
+        # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
             etudiants = functions.students.getAllStudents()
             return jsonify(etudiants)
@@ -133,14 +138,18 @@ def getAllStudents():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Ajout des données impossible"
+            "reason": "Session non disponible"
         }), 400
 
+
+# Modifie l'avatar de l'étudiant en session
+# Param POST : l'avatar de l'étudiant (dico)
+#                   {"avatar":"data:image/png;base64,iVBORw0KGgo..."}
 @students.route('/editAvatar', methods=['POST'])
 def editAvatar():
-    # S'il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        # Si c'est un étudiant
+        # Vérifie qu'il est étudiant
         if session["user"]["type"] == "Etudiant":
             user = session.get("user")
             data = request.get_json(force=True)
@@ -150,7 +159,7 @@ def editAvatar():
             else:
                 return jsonify({
                     "status": 400,
-                    "reason": "Edit d'avatar impossible"
+                    "reason": "Échec de la requête"
                 }), 400
 
         # Ce n'est pas un étudiant
@@ -163,25 +172,33 @@ def editAvatar():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Ajout des données impossible"
+            "reason": "Session non disponible"
         }), 400
 
 
-# Route qui récupère les 3 dernières participations d'un élève
+# Récupère les 3 dernières participations d'un élève
+# Return : les trois dernières diffusions de l'étudiant (tab de dico)
+#                [{"id":7,                           (--> id de la séquence qui a été diffusé)
+#                  "enseignant":"Michel Staelens",
+#                  "participants":25,
+#                  "pourcentage":"82,7",             (--> pourcentage de réussite de l'étudiant)
+#                  "date":07032023
+#                  }, ...]
 @students.route('/getLastSequences', methods=['GET'])
 def getLastSequences():
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        # Si c'est un étudiant
+        # Vérifie qu'il est étudiant
         if session["user"]["type"] == "Etudiant":
             user = session.get("user")
-            sequences = functions.sequences.getLastSequences(user["id"])
-            if sequences != 0:
-                return jsonify(sequences)
+            last_sequences = functions.sequences.getLastSequences(user["id"])
+            if last_sequences != 0:
+                return jsonify(last_sequences)
             # Si l'étudiant n'a participé à aucune séquence
             else:
                 return jsonify({
             "status": 400,
-            "reason": "Récupération des données impossible"
+            "reason": "Échec de la requête"
         }), 400
         # Ce n'est pas un étudiant
         else:
@@ -193,5 +210,5 @@ def getLastSequences():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Récupération des données impossible"
+            "reason": "Session non disponible"
         }), 400
