@@ -1,37 +1,32 @@
 from flask import Blueprint, request, jsonify, session
 
-import functions.sequences as functionSequences
+import functions.sequences as function_sequences
 
 sequences = Blueprint('sequences', __name__, url_prefix='/sequences')
 
 
-# Route pour insérer une Sequence
+# Ajoute une séquence
+# Param POST : un dico avec les infos de la séquence
+#               {"titre": "Le système solaire", "questions": [4,52,12,9]}
 @sequences.route('/addSequence', methods=['POST'])
 def addSequence():
-    # S'il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-
-        # Si c'est un enseignant
+        # Vérifie qu'il est un enseignant
         if session["user"]["type"] == "Enseignant":
             data = request.get_json(force=True)
-
-            titre = data['titre']
-            questions = data['questions']
-
-            if functionSequences.addSequence(session["user"]["id"], titre, questions):
+            if function_sequences.addSequence(session["user"]["id"],  data['titre'], data['questions']):
                 return jsonify({"success": True}), 200
             else:
                 return jsonify({
                     "status": 400,
-                    "reason": "Insert question Invalid"
+                    "reason": "Échec de la requête"
                 }), 400
-        # Ce n'est pas un enseignant
         else:
             return jsonify({
                 "status": 403,
                 "reason": "Permission non accordée"
             }), 403
-    # Pas en session
     else:
         return jsonify({
             "status": 400,
@@ -39,40 +34,32 @@ def addSequence():
         }), 400
 
 
-# Route pour modifier une Séquence
+# Modifie une Séquence
+# Param GET : id de la séquence (int)
+# Param POST : nouvelles infos de la séquence (dico)
+#               {"titre": "Le sens de la vie", "questions": [42]}
 @sequences.route('/editSequence/<id>', methods=['POST'])
 def editSequence(id):
-
-    # S'il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        # Si c'est un enseignant
+        # Vérifie qu'il est un enseignant
         if session["user"]["type"] == "Enseignant":
-            if session["user"]["id"] == functionSequences.getEnseignant(id):
+            # Vérifie que la séquence lui appartient et qu'elle existe
+            if session["user"]["id"] == function_sequences.getEnseignant(id):
+                # Récupère les données en POST
                 data = request.get_json(force=True)
-                titre = data['titre']
-                questions = data['questions']
-
-                # Renvoie 0 si bon
-                # 1 si mauvaise request
-                # 2 si la sequence n'est pas trouvé
-                edit = functionSequences.editSequence(id, titre, questions)
-                if edit == 0:
+                if function_sequences.editSequence(id, data['titre'], data['questions']):
                     return jsonify(success=True), 200
-                elif edit == 2:
+                else:
                     return jsonify({
                         "status": 400,
-                        "reason": "sequence introuvable"
+                        "reason": "Échec de la requête"
                     }), 400
-                elif edit == 1:
-                    return jsonify({
-                        "status": 400,
-                        "reason": "Edit sequence Invalid"
-                    }), 400
-            # Ce n'est pas sa sequence
+            # Ce n'est pas sa séquence
             else:
                 return jsonify({
                     "status": 400,
-                    "reason": "Ce n'est pas votre sequence, ou sequence introuvable"
+                    "reason": "La séquence sélectionnée est introuvable ou ne vous appartient pas"
                 }), 400
         # Ce n'est pas un enseignant
         else:
@@ -88,35 +75,28 @@ def editSequence(id):
         }), 400
 
 
-# Route pour supprimer une Séquence
+# Supprime une Séquence
+# Param GET : id de la séquence (int)
 @sequences.route('/removeSequence/<id>', methods=['GET'])
 def removeSequence(id):
-    # S'il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        # Si c'est un enseignant
+        # Vérifie qu'il est un enseignant
         if session["user"]["type"] == "Enseignant":
-            if session["user"]["id"] == functionSequences.getEnseignant(id):
-                # Renvoie 0 si bon
-                # 1 si mauvaise request
-                # 2 si la sequence n'est pas trouvé
-                get = functionSequences.getSequence(id)
-                if get == 0:
+            # Vérifie que la séquence lui appartient et qu'elle existe
+            if session["user"]["id"] == function_sequences.getEnseignant(id):
+                if function_sequences.removeSequence(id):
                     return jsonify(success=True), 200
-                elif get == 2:
+                else:
                     return jsonify({
                         "status": 400,
-                        "reason": "Sequence introuvable"
+                        "reason": "Échec de la requête"
                     }), 400
-                elif get == 1:
-                    return jsonify({
-                        "status": 400,
-                        "reason": "Edit sequence Invalid"
-                    }), 400
-            # Ce n'est pas sa sequence
+            # Ce n'est pas sa séquence
             else:
                 return jsonify({
                     "status": 400,
-                    "reason": "Ce n'est pas votre sequence, ou sequence introuvable"
+                    "reason": "La séquence sélectionnée est introuvable ou ne vous appartient pas"
                 }), 400
         # Ce n'est pas un enseignant
         else:
@@ -132,23 +112,30 @@ def removeSequence(id):
         }), 400
 
 
+# Renvoie une séquence
+# Param GET : l'id de la séquence (int)
+# Return : les informations de la séquence (dico)
+#             {"id":1,
+#              "titre":"Les Array list en java",
+#              "questions":[6, 18]
+#             }
 @sequences.route("/getSequence/<id>", methods=["GET", "POST"])
 def getSequence(id):
-    # S'il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        # Si c'est un enseignant
+        # Vérifie qu'il est un enseignant
         if session["user"]["type"] == "Enseignant":
-            # Si c'est sa sequence ou qu'elle existe
-            if session["user"]["id"] == functionSequences.getEnseignant(id):
-                result = functionSequences.getSequence(id)
+            # Vérifie que la séquence existe et qu'elle lui appartient
+            if session["user"]["id"] == function_sequences.getEnseignant(id):
+                result = function_sequences.getSequence(id)
                 if result:
                     return jsonify(result)
                 else:
                     return jsonify({
                         "status": 400,
-                        "reason": "Edit sequence Invalid"
+                        "reason": "Échec de la requête"
                     }), 400
-            # Ce n'est pas sa sequence
+            # Ce n'est pas sa séquence
             else:
                 return jsonify({
                     "status": 400,
@@ -168,20 +155,28 @@ def getSequence(id):
         }), 400
 
 
+# Renvoie toutes les séquences d'un enseignant
+# Param GET : l'id de l'enseignant (int)
+# Return : les informations de la séquence (dico)
+#             [{"id":1,
+#              "titre":"Les Array list en java",
+#              "questions":[6, 18]}
+#              "listeEtiquettes":["{"nom":"Java", "couleur":"c47f31"}, {...}]
+#              }, {...}, ...]
 @sequences.route("/getAllSequences", methods=["GET"])
 def getAllSequences():
-    # S'il est en session
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        # Si c'est un enseignant
+        # Vérifie qu'il est un enseignant
         if session["user"]["type"] == "Enseignant":
-                result = functionSequences.getAllSequences(session["user"]["id"])
-                if result:
-                    return jsonify(result)
-                else:
-                    return jsonify({
-                        "status": 400,
-                        "reason": "Edit sequence Invalid"
-                    }), 400
+            result = function_sequences.getAllSequences(session["user"]["id"])
+            if result:
+                return jsonify(result)
+            else:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Échec de la requête"
+                }), 400
         # Ce n'est pas un enseignant
         else:
             return jsonify({

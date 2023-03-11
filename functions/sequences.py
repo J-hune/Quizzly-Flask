@@ -73,40 +73,35 @@ def addSequence(enseignant, titre, tab_questions):
 #          - 1 si échec de la requête
 #          - 2 si la séquence n'est pas trouvée
 def editSequence(id, titre, tab_questions):
-    # Si la séquence existe
-    if getEnseignant(id):
-        try:
-            # Connection à la BDD
-            conn = sqlite3.connect('database.db')
-            cursor = conn.cursor()
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
-            # Active les clés étrangères
-            cursor.execute("PRAGMA foreign_keys = ON")
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
 
-            # Modification du titre de la séquence
-            cursor.execute("UPDATE Sequences SET titre = ? WHERE id = ?;", (titre, id))
+        # Modification du titre de la séquence
+        cursor.execute("UPDATE Sequences SET titre = ? WHERE id = ?;", (titre, id))
+        # Suppression des liens entre les questions et la séquence
+        cursor.execute("DELETE FROM liensSequencesQuestions WHERE idSequence = ?;", (id,))
+        conn.commit()
 
-            # Suppression des données dans la table
-            cursor.execute("DELETE FROM liensSequencesQuestions WHERE idSequence = ?;", (id,))
+        # Pour chaque question
+        for i in range(len(tab_questions)):
+            # Ajout des liens entre les questions et la séquence
+            cursor.execute("INSERT or IGNORE INTO liensSequencesQuestions (idSequence, idQuestion) VALUES (?, ?);",
+                        (id, tab_questions[i]))
             conn.commit()
 
-            # pour chaque question
-            for i in range(len(tab_questions)):
-                # insertion des données dans la table
-                cursor.execute("INSERT or IGNORE INTO liensSequencesQuestions (idSequence, idQuestion) VALUES (?, ?);",
-                            (id, tab_questions[i]))
-                conn.commit()
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return True
 
-            # Fermeture de la connection
-            cursor.close()
-            conn.close()
-            return 0
-
-        except sqlite3.Error as error:
-            print("Une erreur est survenue lors de la modification de la séquence :", error)
-            return 1
-    else:
-        return 2
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la modification de la séquence :", error)
+        return False
 
 
 # Supprime une séquence
@@ -115,30 +110,26 @@ def editSequence(id, titre, tab_questions):
 #          - 1 si échec de la requête
 #          - 2 si la sequence n'est pas trouvée
 def removeSequence(id):
-    # Si la séquence existe
-    if getEnseignant(id):
-        try:
-            # Connection à la BDD
-            conn = sqlite3.connect('database.db')
-            cursor = conn.cursor()
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
-            # Active les clés étrangères
-            cursor.execute("PRAGMA foreign_keys = ON")
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
 
-            # Suppression de la séquence (update on cascade supprime les liens)
-            cursor.execute("DELETE FROM Sequences WHERE id = ?;", (id,))
-            conn.commit()
+        # Suppression de la séquence (update on cascade supprime les liens)
+        cursor.execute("DELETE FROM Sequences WHERE id = ?;", (id,))
+        conn.commit()
 
-            # Fermeture de la connection
-            cursor.close()
-            conn.close()
-            return 0
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return True
 
-        except sqlite3.Error as error:
-            print("Une erreur est survenue lors de la suppression de la séquence :", error)
-            return 1
-    else:
-        return 2
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la suppression de la séquence :", error)
+        return False
 
 
 # Récupère une séquence
