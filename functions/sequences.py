@@ -260,19 +260,19 @@ def getLastSequences(id):
         # Connection à la BDD
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
-
         # Active les clés étrangères
         cursor.execute("PRAGMA foreign_keys = ON")
 
         # Récupère l'id des 3 dernières séquences participé, le nom/prénom du prof et le pourcentage de bonne réponse
-        #                                                                   nbRéponse     nbBonneRéponse
+        #                                                                  nbRéponse     nbBonneRéponse
         result = cursor.execute("SELECT AD.id, AD.mode, E.prenom, E.nom, COUNT(AR.id), SUM(AR.est_correcte), AD.date \
                                             FROM ArchivesDiffusions AD \
-                                            JOIN ArchivesReponses AR ON AD.id = AR.diffusion \
+                                            JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
+                                            JOIN ArchivesReponses AR ON AQ.id = AR.question \
                                             JOIN Enseignants E ON AD.enseignant = E.id \
                                             JOIN Sequences S ON AD.mode = S.id \
                                             WHERE AR.etudiant = ? \
-                                            GROUP BY AD.id \
+                                            GROUP BY AD.id, AR.etudiant \
                                             ORDER BY AD.date DESC LIMIT 3;", (id,))
         result = result.fetchall()
 
@@ -282,14 +282,11 @@ def getLastSequences(id):
             # Récupère le nombre de participants à la diffusion
             nb_participant = cursor.execute("SELECT COUNT(DISTINCT AR.etudiant) \
                                             FROM ArchivesDiffusions AD \
-                                            JOIN ArchivesReponses AR ON AD.id = AR.diffusion \
+                                            JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
+                                            JOIN ArchivesReponses AR ON AQ.id = AR.question \
                                             WHERE AD.id = ? \
                                             GROUP BY AD.id;", (result[i][0],))
             nb_participant = nb_participant.fetchone()
-
-            # Fermeture de la connection
-            cursor.close()
-            conn.close()
 
             # Range les données dans un dico
             data = {"id": result[i][1],
@@ -300,6 +297,9 @@ def getLastSequences(id):
                     }
             tab.append(data)
 
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
         return tab
 
     except sqlite3.Error as error:
