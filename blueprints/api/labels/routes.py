@@ -28,7 +28,7 @@ def addLabel(name, hexa):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -50,7 +50,7 @@ def editLabel():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -70,7 +70,7 @@ def deleteLabel(id):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -87,5 +87,5 @@ def getLabels():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400

@@ -39,7 +39,7 @@ def insertStudents():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -76,7 +76,7 @@ def removeStudent(id):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -106,7 +106,7 @@ def removeAllStudent():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -138,7 +138,7 @@ def getAllStudents():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -172,7 +172,7 @@ def editAvatar():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -210,5 +210,5 @@ def getLastSequences():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400

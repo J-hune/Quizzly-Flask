@@ -37,7 +37,7 @@ def addQuestion():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -74,7 +74,7 @@ def editQuestion(id):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -94,7 +94,7 @@ def deleteQuestion(id):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -122,7 +122,7 @@ def getQuestions(label=None):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -152,5 +152,5 @@ def getQuestion(id):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400

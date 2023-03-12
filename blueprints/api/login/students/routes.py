@@ -55,5 +55,5 @@ def editPassword():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400

@@ -30,7 +30,7 @@ def addSequence():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -71,7 +71,7 @@ def editSequence(id):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -108,7 +108,7 @@ def removeSequence(id):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -151,7 +151,7 @@ def getSequence(id):
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
 
 
@@ -187,5 +187,5 @@ def getAllSequences():
     else:
         return jsonify({
             "status": 400,
-            "reason": "Session non disponible"
+            "reason": "La connection a échouée"
         }), 400
