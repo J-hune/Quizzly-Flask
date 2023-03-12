@@ -1,11 +1,13 @@
 import copy
 import sqlite3
+import time
 
 from flask import session, request
 from flask_socketio import emit, join_room, leave_room, close_room
 
 from functions.broadcast import generateCode, deleteCode
 from functions.questions import getQuestion
+from functions.statistics.save import saveDiffusions
 
 sequenceEnCours = {}  # Les données de ce tableau peuvent servir pour les stats (il manque la date).
 
@@ -15,15 +17,18 @@ sequenceEnCours = {}  # Les données de ce tableau peuvent servir pour les stats
 #  'GAHisbh5': {
 #      'name': 'GAHisbh5',
 #      'enseignant': 'GEBXTRQbmhZOTXqrAAAF',
+#      'id_enseignant' : 12,
 #      'mode': 'sequence', (ou 'question')
 #      'etudiants': [{'id': 22100000, 'nom': 'donov zst'}],
 #      'questions': [],
+#      'copieQuestions' : [],
 #      'derQuestionTraitee': objet de type question,
 #      'stopReponses': False,
 #      'reponsesEtudiant': [
-#          {'id': 22100000, 'question': 6, 'answer': 20},
-#          {'id': 22100000, 'question': 18, 'answer': [33]}
-#      ]
+#          {'id': 22100000, 'question': 6, 'answer': 20,'date':1678558000, 'est_correcte': 0},
+#          {'id': 22100000, 'question': 18, 'answer': [33],'date':1678558989, 'est_correcte': 0}
+#      ],
+#      'date':1678558957
 #  }
 
 # Quand un nouvel utilisateur se connecte au socket
@@ -55,6 +60,7 @@ def disconnect():
                 emit("renderSequenceEnd", to=room_id)
                 close_room(room_id)
                 deleteCode(room_id)
+                saveDiffusions(sequenceEnCours[room_id])
                 del sequenceEnCours[room_id]
 
     elif 'user' in session and session["user"]["type"] == "Etudiant":
@@ -110,12 +116,15 @@ def createRoomSequence(sequence_id):
             sequenceEnCours[room_id] = {
                 'name': room_id,
                 'enseignant': request.sid,
+                'id_enseignant': session["user"]["id"],
                 'mode': 'sequence',
                 'etudiants': [],
                 "questions": [int(t[0]) for t in res],
+                "copieQuestions": [int(t[0]) for t in res],
                 "derQuestionTraitee": None,
                 "stopReponses": False,
-                "reponsesEtudiant": []
+                "reponsesEtudiant": [],
+                "date":int(time.time())
             }
 
             # On demande au client d'afficher la page d'attente
@@ -177,10 +186,38 @@ def askCorrection():
             if question['type'] == 0:
                 reponses_justes = [r['id'] for r in question['reponses'] if r['reponseJuste']]
                 emit("renderCorrection", reponses_justes, to=room_id)
+
+                # On ajoute le booleen pour savoir si l'étudiant a eu des bonnes réponses à la question
+                for i in range(len(sequenceEnCours[room_id]["reponsesEtudiant"])):
+
+                    # Si on n'a pas déjà verifier cette question
+                    if not ('est_correcte' in sequenceEnCours[room_id]["reponsesEtudiant"][i]):
+                        # Si les longueurs des réponses correspondent pour éviter un tour de boucle inutile
+                        if len(sequenceEnCours[room_id]["reponsesEtudiant"][i]['answer']) != len(reponses_justes):
+                            sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 0
+                        else:
+                            j = 0
+                            # Boucle pour savoir si l'étudiant a toutes les bonnes réponses au QCM
+                            while j < len(reponses_justes) and reponses_justes[j] in sequenceEnCours[room_id]["reponsesEtudiant"][i]['answer']:
+                                j += 1
+                            if j == len(reponses_justes):
+                                sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 1
+                            else:
+                                sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 0
+
             elif question['type'] == 1:
                 numerique = question['numerique']
                 emit("renderCorrection", numerique, to=room_id)
 
+                # On ajoute le booleen pour savoir si l'étudiant a eu la bonne réponse à la question
+                for i in range(len(sequenceEnCours[room_id]["reponsesEtudiant"])):
+
+                    # Si on n'a pas déjà verifier cette question
+                    if not ('est_correcte' in sequenceEnCours[room_id]["reponsesEtudiant"][i]):
+                        if sequenceEnCours[room_id]["reponsesEtudiant"][i]['answer'] == numerique:
+                            sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 1
+                        else:
+                            sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 0
         else:
             emit("error", "La room #" + room_id + " n'existe pas")
     else:
@@ -266,7 +303,8 @@ def submitAnswer(answer):
                 sequenceEnCours[room_id]["reponsesEtudiant"].append({
                     "id": session["user"]["id"],
                     "question": sequenceEnCours[room_id]["derQuestionTraitee"]["id"],
-                    "answer": answer
+                    "answer": answer,
+                    "date":int(time.time())
                 })
                 emit("renderSubmitButton", False, to=request.sid)
 
@@ -305,9 +343,11 @@ def createRoomQuestion(question_id):
             'mode': 'question',
             'etudiants': [],
             "questions": [question_id],
+            "copieQuestions": [question_id],
             "derQuestionTraitee": None,
             "stopReponses": False,
-            "reponsesEtudiant": []
+            "reponsesEtudiant": [],
+            "date": int(time.time())
         }
 
         # On demande au client d'afficher la page d'attente
