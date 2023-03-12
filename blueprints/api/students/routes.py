@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 
-import functions.users
+import functions.students
 from functions.students import addStudent, removeStudent
 from functions.sequences import getLastSequences
 
