@@ -145,6 +145,9 @@ def getSequence(id):
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
         # Sélection de la séquence et de ses liens avec les questions
         result = cursor.execute("SELECT id, titre, idQuestion FROM Sequences \
                                     JOIN liensSequencesQuestions ON Sequences.id=liensSequencesQuestions.idSequence \
@@ -190,6 +193,9 @@ def getAllSequences(id_enseignant):
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
+
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
 
         # Sélection des séquences de l'enseignant et de leurs liens avec les questions
         result = cursor.execute("SELECT id, titre FROM Sequences WHERE enseignant=?;", (id_enseignant,))
@@ -260,6 +266,7 @@ def getLastSequences(id):
         # Connection à la BDD
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
+
         # Active les clés étrangères
         cursor.execute("PRAGMA foreign_keys = ON")
 

@@ -249,10 +249,10 @@ def getReponses(id):
 #                             [ {"reponse": "Steam", "reponseJuste": True},
 #                               {"reponse": "EpicGames", "reponseJuste": False}, ...
 #                             ]
-#         - numérique : la réponse numérique (float)
+#         - numérique : la réponse numérique (string)
 def editQuestion(id, question_type, enonce, etiquettes, reponses, numerique):
     try:
-        # Connection à la table
+        # Connection à la BDD
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 

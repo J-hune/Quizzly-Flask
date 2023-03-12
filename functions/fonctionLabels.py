@@ -41,9 +41,6 @@ def addLabel(nom, couleur, id_enseignant):
             conn = sqlite3.connect('database.db')
             cursor = conn.cursor()
 
-            # Active les clés étrangères
-            cursor.execute("PRAGMA foreign_keys = ON")
-
             # Insère l'étiquette
             cursor.execute("INSERT INTO Etiquettes ('nom','couleur','enseignant') VALUES(?, ?, ?);",
                            (nom, couleur, id_enseignant))

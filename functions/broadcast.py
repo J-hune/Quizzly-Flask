@@ -6,7 +6,7 @@ import random
 # Vérifie si le code existe déjà dans la BDD
 # Param : - cursor : le cursor de la BDD
 #         - code : le code alphanumérique généré (string)
-# Return : True si code existe déjà sinon False
+# Return : True si le code existe déjà, sinon False
 def codeAlreadyExists(cursor, code):
     try:
         cursor.execute("SELECT id FROM Codes WHERE id=?;", (code,))
