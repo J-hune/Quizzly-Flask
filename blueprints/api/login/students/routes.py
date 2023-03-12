@@ -5,20 +5,23 @@ from functions.students import changePassword
 students = Blueprint('students', __name__, url_prefix='/students')
 
 
+# Permet de se connecter en tant qu'étudiant
+# Param POST : ?
+# Return : ?
 @students.route('/signin', methods=['POST'])
 def signin():
     data = request.get_json(force=True)
-    studentID = data.get("id")
+    student_id = data.get("id")
     password = data.get("password")
 
     # Si un des champs est vide (en plus de la vérification client)
-    if not (studentID and password):
+    if not (student_id and password):
         return jsonify({
             "status": 401,
-            "reason": "ID or Password Invalid"
+            "reason": "Identifiant ou mot de passe invalide"
         }), 401
     else:
-        student = studentExists(studentID, password)
+        student = studentExists(student_id, password)
 
         # Si l'étudiant existe en base de donnée
         if student:
@@ -33,8 +36,12 @@ def signin():
             }), 401
 
 
+# Modifie le mot de passe d'un étudiant en session
+# Param POST : le mot de passe dans un dico
+#               {"password":"aertyuiop"}
 @students.route('/editPassword', methods=['POST'])
 def editPassword():
+    # Vérifie que l'utilisateur est en session
     if 'user' in session:
         data = request.get_json(force=True)
         if changePassword(session["user"]["id"], data["password"]):
@@ -42,7 +49,7 @@ def editPassword():
         else:
             return jsonify({
                 "status": 400,
-                "reason": "Modification de mot de passe : Invalid"
+                "reason": "Échec de la requête"
             }), 400
 
     else:
