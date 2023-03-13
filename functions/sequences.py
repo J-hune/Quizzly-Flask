@@ -271,14 +271,13 @@ def getLastSequences(id):
         cursor.execute("PRAGMA foreign_keys = ON")
 
         # Récupère l'id des 3 dernières séquences participé, le nom/prénom du prof et le pourcentage de bonne réponse
-        #                                                                  nbRéponse     nbBonneRéponse
-        result = cursor.execute("SELECT AD.id, AD.mode, E.prenom, E.nom, COUNT(AR.id), SUM(AR.est_correcte), AD.date \
+        #                                                                           nbRéponse     nbBonneRéponse
+        result = cursor.execute("SELECT AD.id, AD.code, AD.titre, E.prenom, E.nom, COUNT(AR.id), SUM(AR.est_correcte), AD.date \
                                             FROM ArchivesDiffusions AD \
                                             JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
                                             JOIN ArchivesReponses AR ON AQ.id = AR.question \
                                             JOIN Enseignants E ON AD.enseignant = E.id \
-                                            JOIN Sequences S ON AD.mode = S.id \
-                                            WHERE AR.etudiant = ? \
+                                            WHERE AR.etudiant = ? AND AD.mode = 1 \
                                             GROUP BY AD.id, AR.etudiant \
                                             ORDER BY AD.date DESC LIMIT 3;", (id,))
         result = result.fetchall()
@@ -291,16 +290,16 @@ def getLastSequences(id):
                                             FROM ArchivesDiffusions AD \
                                             JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
                                             JOIN ArchivesReponses AR ON AQ.id = AR.question \
-                                            WHERE AD.id = ? \
-                                            GROUP BY AD.id;", (result[i][0],))
+                                            WHERE AD.id = ?;", (result[i][0],))
             nb_participant = nb_participant.fetchone()
 
             # Range les données dans un dico
-            data = {"id": result[i][1],
-                    "enseignant": result[i][2] + " " + result[i][3],
+            data = {"code": result[i][1],
+                    "titre": result[i][2],
+                    "enseignant": result[i][3] + " " + result[i][4],
                     "participants": nb_participant[0],
-                    "pourcentage": ((result[i][5] / result[i][4]) * 100),
-                    "date": result[i][6]
+                    "pourcentage": ((result[i][6] / result[i][5]) * 100),
+                    "date": result[i][7]
                     }
             tab.append(data)
 
