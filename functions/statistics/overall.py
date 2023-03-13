@@ -2,6 +2,26 @@ import sqlite3
 from datetime import datetime, time
 
 
+# Calcule le pourcentage de réussite total parmi toutes les diffusions d'un enseignant
+# Param : - cursor : cursor de la BDD
+#         - enseignant : id de l'enseignant (int)
+# Return : le pourcentage de réussite totale (float)
+def countTotalPourcentage(cursor, enseignant):
+    try:
+        # Compte le nombre de réponses et le nombre de bonnes réponses
+        cursor.execute("SELECT COUNT(AR.id), SUM(AR.est_correcte) \
+                        FROM ArchivesDiffusions AD \
+                        JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
+                        JOIN ArchivesReponses AR ON AQ.id = AR.question \
+                        WHERE enseignant = ?;", (enseignant,))
+        result = cursor.fetchone()
+        return (result[1]/result[0])*100  # Calcule le pourcentage et le renvoie
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélection du pourcentage :", error)
+        return 0
+
+
 # Compte le nombre de diffusions d'un enseignant pour un mode donné
 # Param : - cursor : cursor de la BDD
 #         - mode_diffusion : 0 pour une question et 1 pour une séquence (int)
@@ -89,7 +109,8 @@ def getOverallStats(enseignant, nb_jour):
             "participantsSequences": [],
             "participantsQuestions": [],
             "totalQuestions": countTotalBroadcast(cursor, 0, enseignant),
-            "totalSequences": countTotalBroadcast(cursor, 1, enseignant)
+            "totalSequences": countTotalBroadcast(cursor, 1, enseignant),
+            "pourcentage": countTotalPourcentage(cursor, enseignant)
         }
 
         # Compte le nombre de participants aux diffusions pour les "nb_jour" dernier jour, et l'ajoute à data
