@@ -2,57 +2,29 @@ import sqlite3
 from datetime import datetime, time
 
 
-# Calcule le nombre de participants par jour aux diffusions d'un enseignant
-# Param : - enseignant : l'id de l'enseignant (int)
-#         - nb_jour : le nombre de jours souhaité (int)
-# Return : le nombre de participants aux questions et séquences chaque jour,
-#          chaque index de chaque tableau correspondent à la même donnée (dico de tab)
-#               {
-#                 "jours": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
-#                 "participantsSequences": [10, 20, 0, 40, 50],
-#                 "participantsQuestions": [2, 0, 4, 50, 0]
-#               }
-def overallStatistics(enseignant, nb_jour=10):
+# Compte le nombre de diffusions d'un enseignant pour un mode donné
+# Param : - cursor : cursor de la BDD
+#         - mode_diffusion : 0 pour une question et 1 pour une séquence (int)
+#         - enseignant : l'id de l'enseignant (int)
+# Return : le nombre de diffusions de l'enseignant selon le mode (int)
+def countTotalBroadcast(cursor, mode_diffusion, enseignant):
     try:
-        # Date du jour actuel (à minuit pile)
-        jour = datetime.timestamp(datetime.combine(datetime.now(), time.min))
-
-        # Connection à la BDD
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-
-        # Active les clés étrangères
-        cursor.execute("PRAGMA foreign_keys = ON")
-
-        overall = {
-            "jours": [],
-            "participantsSequences": [],
-            "participantsQuestions": []
-        }
-
-        for i in range(nb_jour):
-
-            overall["jours"].append(jour)
-            overall["participantsSequences"].append(countParticipantByDay(cursor, jour, 1, enseignant))
-            overall["participantsQuestions"].append(countParticipantByDay(cursor, jour, 0, enseignant))
-
-            jour -= 86400  # Jour précédent
-
-        # Fermeture de la connection
-        cursor.close()
-        conn.close()
-
-        return overall
+        # Compte le nombre diffusion d'un enseignant selon le mode
+        cursor.execute("SELECT COUNT(id) \
+                                FROM ArchivesDiffusions \
+                                WHERE mode = ? AND enseignant = ?;", (mode_diffusion, enseignant))
+        result = cursor.fetchone()
+        return result[0]
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la sélection des statistiques :", error)
-        return False
+        print("Une erreur est survenue lors de la sélection du nombre de diffusion :", error)
+        return 0
 
 
 # Compte le nombre de participants à une diffusion pour un jour et un mode donné
 # Param : - cursor : cursor BDD
 #         - jour : la date du jour en timestamp (int)
-#         - mode_diffusion : le mode de diffusion choisi, 0 pour une question, 1 pour une séquence
+#         - mode_diffusion : le mode de diffusion choisi, 0 pour une question, 1 pour une séquence (int)
 # Return : le nombre de participants à une diffusion de question (si plus d'une diffusion, moyenne de ces diffusions)
 def countParticipantByDay(cursor, jour, mode_diffusion, enseignant):
     try:
@@ -73,9 +45,8 @@ def countParticipantByDay(cursor, jour, mode_diffusion, enseignant):
         for i in range(len(result)):
             nb_participant += result[i][0]
 
-        # Calcule la moyenne des participants du jour (nb participant total / nb diffusion)
-
         if len(result) > 0:
+            # Calcule la moyenne des participants du jour (nb participant total / nb diffusion)
             nb_participant = nb_participant/len(result)
         return nb_participant
 
@@ -84,4 +55,58 @@ def countParticipantByDay(cursor, jour, mode_diffusion, enseignant):
         return 0
 
 
+# Renvoie un dictionnaire avec toutes les statistiques générales sur les diffusions de l'enseignant
+# Param : - enseignant : l'id de l'enseignant (int)
+#         - nb_jour : le nombre de jours à calculer par rapport à aujourd'hui (int)
+# Return : un dico avec les statistiques générales de l'enseignant
+#
+#          /!\ chaque index des tableaux correspondent à la même donnée (pour le jour jours[i],
+#          participantsSequences[i] ont participé à des séquences et participantsQuestions[i]
+#          ont participé à des questions) /!\
 
+#             {
+#               "jours": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
+#               "participantsSequences": [10, 20, 0, 40, 50],
+#               "participantsQuestions": [2, 0, 4, 50, 0],
+#               "totalQuestions": 10,
+#               "totalSequences": 21
+#             }
+def getOverallStats(enseignant, nb_jour):
+    try:
+        # Date du jour actuel (à minuit pile)
+        jour = datetime.timestamp(datetime.combine(datetime.now(), time.min))
+
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
+        # Compte le nombre total de diffusions de question et de séquence, puis ordonne les données
+        data = {
+            "jours": [],
+            "participantsSequences": [],
+            "participantsQuestions": [],
+            "totalQuestions": countTotalBroadcast(cursor, 0, enseignant),
+            "totalSequences": countTotalBroadcast(cursor, 1, enseignant)
+        }
+
+        # Compte le nombre de participants aux diffusions pour les "nb_jour" dernier jour, et l'ajoute à data
+        for i in range(nb_jour):
+
+            data["jours"].append(jour)
+            data["participantsQuestions"].append(countParticipantByDay(cursor, jour, 0, enseignant))
+            data["participantsSequences"].append(countParticipantByDay(cursor, jour, 1, enseignant))
+
+            jour -= 86400  # Jour précédent
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+
+        return data
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélection des statistiques :", error)
+        return False
