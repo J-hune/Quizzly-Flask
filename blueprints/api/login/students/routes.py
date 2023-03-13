@@ -32,7 +32,7 @@ def signin():
         else:
             return jsonify({
                 "status": 401,
-                "reason": "First Name, Surname or Password Invalid"
+                "reason": "Identifiant ou mot de passe invalide"
             }), 401
 
 
