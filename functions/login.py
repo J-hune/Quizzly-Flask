@@ -1,7 +1,6 @@
 import sqlite3
 from flask import session
 from werkzeug.security import generate_password_hash, check_password_hash
-from functions.students import getAvatar
 
 
 # Ajoute l'enseignant en session et en base de donnée
@@ -115,18 +114,16 @@ def studentExists(student_id, password):
         cursor.execute("SELECT * FROM Etudiants WHERE id = ?;", (student_id,))
         result = cursor.fetchone()
 
-        # Pour chaque étudiant
-        for i in result:
-            # Si le condensat correspond au mot de passe
-            if check_password_hash(i[3], password):
-                session["user"] = {
-                    'id': i[0],
-                    'firstname': i[2],
-                    'surname': i[1],
-                    'type': "Etudiant"
-                }
-                # session.permanent = True ????? (au-dessus c'est pas commenté, pourquoi ?)
-                return {**session["user"], "avatar": getAvatar(session["user"]["id"])}
+        # Si le condensat correspond au mot de passe
+        if check_password_hash(result[3], password):
+            session["user"] = {
+                'id': result[0],
+                'firstname': result[2],
+                'surname': result[1],
+                'type': "Etudiant"
+            }
+            # session.permanent = True ????? (au-dessus c'est pas commenté, pourquoi ?)
+            return {**session["user"], "avatar": result[4]}
 
         # Fermeture de la connection
         conn.commit()
