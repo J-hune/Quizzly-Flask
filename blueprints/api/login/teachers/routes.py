@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from functions.login import registerTeacher, teacherExists
+from functions.teachers import registerTeacher, teacherExists
 
 teachers = Blueprint('teachers', __name__, url_prefix='/teachers')
 

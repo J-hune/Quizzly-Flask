@@ -9,10 +9,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 #         - password : mot de passe de l'enseignant (string)
 def registerTeacher(firstname, surname, password):
     try:
-        # ?
+        # On enlève les espaces
         firstname = firstname.strip()
         surname = surname.strip()
-        password = password.strip()
 
         # Génération du condensat du mot de passe avec l'algo sha256
         hashed_password = generate_password_hash(password, 'sha256')
@@ -57,10 +56,9 @@ def registerTeacher(firstname, surname, password):
 #               }
 def teacherExists(firstname, surname, password):
     try:
-        # ?
+        # On enlève les espaces
         firstname = firstname.strip()
         surname = surname.strip()
-        password = password
 
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
@@ -91,45 +89,4 @@ def teacherExists(firstname, surname, password):
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la sélection de l'enseignant :", error)
-        return False
-
-
-# Renvoie les infos de l'étudiant s'il existe en BDD et l'ajoute en session si tel est le cas
-# Param : - student_id : le numéro étudiant de l'étudiant (string)
-#         - password : mot de passe de l'étudiant (string)
-# Return : les infos de l'étudiant (dico) ou False
-#               {
-#                "id": "1",
-#                "firstname": "Donovann",
-#                "surname": "Zassot",
-#                "type": "Enseignant"
-#               }
-def studentExists(student_id, password):
-    try:
-        # Connection à la BDD
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-
-        # Récupère tous les étudiants qui ont ce couple nom/prénom
-        cursor.execute("SELECT * FROM Etudiants WHERE id = ?;", (student_id,))
-        result = cursor.fetchone()
-
-        # Si le condensat correspond au mot de passe
-        if check_password_hash(result[3], password):
-            session["user"] = {
-                'id': result[0],
-                'firstname': result[2],
-                'surname': result[1],
-                'type': "Etudiant"
-            }
-            # session.permanent = True ????? (au-dessus c'est pas commenté, pourquoi ?)
-            return {**session["user"], "avatar": result[4]}
-
-        # Fermeture de la connection
-        conn.commit()
-        conn.close()
-        return False
-
-    except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la sélection de l'étudiant :", error)
         return False

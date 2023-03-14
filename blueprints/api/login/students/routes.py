@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request, session
-from functions.login import studentExists
-from functions.students import changePassword
+from functions.students import changePassword, studentExists
 
 students = Blueprint('students', __name__, url_prefix='/students')
 
