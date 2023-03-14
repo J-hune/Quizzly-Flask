@@ -22,19 +22,20 @@ def countTotalPourcentage(cursor, enseignant):
         return 0
 
 
-# Compte le nombre de diffusions d'un enseignant pour un mode donné
+# Compte le nombre de diffusions et le nombre de questions posées d'un enseignant
 # Param : - cursor : cursor de la BDD
-#         - mode_diffusion : 0 pour une question et 1 pour une séquence (int)
 #         - enseignant : l'id de l'enseignant (int)
-# Return : le nombre de diffusions de l'enseignant selon le mode (int)
-def countTotalBroadcast(cursor, mode_diffusion, enseignant):
+# Return : le nombre de diffusions et le nombre de questions posées (int)
+def countTotalQuiz(cursor, enseignant):
     try:
         # Compte le nombre diffusion d'un enseignant selon le mode
-        cursor.execute("SELECT COUNT(id) \
-                                FROM ArchivesDiffusions \
-                                WHERE mode = ? AND enseignant = ?;", (mode_diffusion, enseignant))
+        #                         nbQuiz                 nbQuestion
+        cursor.execute("SELECT COUNT(DISTINCT AD.id), COUNT(DISTINCT AQ.id) \
+                            FROM ArchivesDiffusions AD \
+                            JOIN ArchivesQuestions AQ \
+                            WHERE enseignant = ?;", (enseignant,))
         result = cursor.fetchone()
-        return result[0]
+        return result
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la sélection du nombre de diffusion :", error)
@@ -103,13 +104,16 @@ def getOverallStats(enseignant, nb_jour):
         # Active les clés étrangères
         cursor.execute("PRAGMA foreign_keys = ON")
 
-        # Compte le nombre total de diffusions de question et de séquence, puis ordonne les données
+
+
+        # Compte le nombre total de diffusions de question et de quiz (diffusion), puis ordonne les données
+        total = countTotalQuiz(cursor, enseignant)
         data = {
             "jours": [],
             "participantsSequences": [],
             "participantsQuestions": [],
-            "totalQuestions": countTotalBroadcast(cursor, 0, enseignant),
-            "totalSequences": countTotalBroadcast(cursor, 1, enseignant),
+            "totalQuestions": total[1],
+            "totalQuiz": total[0],
             "pourcentage": countTotalPourcentage(cursor, enseignant)
         }
 
