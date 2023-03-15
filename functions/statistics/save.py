@@ -6,6 +6,7 @@ from functions.questions import getQuestion
 # Param : Un dico qui contient toutes les infos de la sequence :
 # {
 #      'name': 'GAHisbh5',
+#      'titre' : titre de la sequence ou enonce de la question,
 #      'enseignant': 'GEBXTRQbmhZOTXqrAAAF',
 #      'id_enseignant' : 12,
 #      'mode': 'sequence', (ou 'question')
@@ -23,7 +24,8 @@ from functions.questions import getQuestion
 def saveDiffusions(sequence):
 
     # Appel a la fonction pour creer l'archive de la diffusion et récupère l'id de la diffusion
-    diffusion_id = saveArchivesDiffusion(sequence["date"], sequence["mode"], sequence["id_enseignant"])
+    diffusion_id = saveArchivesDiffusion(sequence["date"], sequence["mode"], sequence["id_enseignant"],
+                                         sequence["titre"], sequence["name"])
     if not diffusion_id :
         return False
 
@@ -50,7 +52,7 @@ def saveDiffusions(sequence):
 #             l'id de la diffusion qui vient d'être ajouté (int)
 #          Sinon :
 #             False en cas d'échec
-def saveArchivesDiffusion(date, mode, enseignant):
+def saveArchivesDiffusion(date, mode, enseignant, titre, code):
     try:
 
         # Change en booleen le mode pour correspondre à la BDD
@@ -64,7 +66,7 @@ def saveArchivesDiffusion(date, mode, enseignant):
         cursor = conn.cursor()
 
         # Insertion de la diffusion dans la table
-        cursor.execute("INSERT INTO ArchivesDiffusions (date, mode, enseignant) VALUES (?, ?, ?);", (date, mode, enseignant))
+        cursor.execute("INSERT INTO ArchivesDiffusions (date, mode, enseignant) VALUES (?, ?, ?, ?, ?);", (date, mode, enseignant, titre, code))
         conn.commit()
 
         # Récupère l'id de la dernière diffusion insérée (avec l'auto-increment)

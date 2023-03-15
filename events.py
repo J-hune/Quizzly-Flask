@@ -16,6 +16,7 @@ sequenceEnCours = {}  # Les données de ce tableau peuvent servir pour les stats
 
 #  'GAHisbh5': {
 #      'name': 'GAHisbh5',
+#      'titre' : titre de la sequence ou enonce de la question,
 #      'enseignant': 'GEBXTRQbmhZOTXqrAAAF',
 #      'id_enseignant' : 12,
 #      'mode': 'sequence', (ou 'question')
@@ -92,7 +93,8 @@ def createRoomSequence(sequence_id):
         cur = con.cursor()
 
         # Selection des données dans la table
-        cur.execute("SELECT idQuestion FROM liensSequencesQuestions WHERE idSequence = ?;", (sequence_id,))
+        cur.execute("""SELECT idQuestion, titre FROM liensSequencesQuestions 
+                    JOIN Sequences ON Sequences.id = liensSequencesQuestions.idSequence  WHERE idSequence = ?;""", (sequence_id,))
         res = cur.fetchall()
 
         # Fermeture de la connection
@@ -115,6 +117,7 @@ def createRoomSequence(sequence_id):
             # diffusion avec toutes les informations utiles aux echanges de reponses et questions
             sequenceEnCours[room_id] = {
                 'name': room_id,
+                'titre': res[0][1],
                 'enseignant': request.sid,
                 'id_enseignant': session["user"]["id"],
                 'mode': 'sequence',
@@ -339,6 +342,7 @@ def createRoomQuestion(question_id):
         # diffusion avec toutes les informations utiles aux echanges de reponses et questions
         sequenceEnCours[room_id] = {
             'name': room_id,
+            'titre': getQuestion(question_id)["enonce"],
             'enseignant': request.sid,
             'mode': 'question',
             'etudiants': [],
