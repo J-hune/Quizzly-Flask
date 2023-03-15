@@ -66,7 +66,8 @@ def saveArchivesDiffusion(date, mode, enseignant, titre, code):
         cursor = conn.cursor()
 
         # Insertion de la diffusion dans la table
-        cursor.execute("INSERT INTO ArchivesDiffusions (date, mode, enseignant) VALUES (?, ?, ?, ?, ?);", (date, mode, enseignant, titre, code))
+        cursor.execute("INSERT INTO ArchivesDiffusions (date, mode, enseignant, titre, code) VALUES (?, ?, ?, ?, ?);",
+                       (date, mode, enseignant, titre, code))
         conn.commit()
 
         # Récupère l'id de la dernière diffusion insérée (avec l'auto-increment)
@@ -115,7 +116,7 @@ def saveArchivesQuestions(id_question, id_diffusion):
         return True
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de l'insertion de la diffusion : ", error)
+        print("Une erreur est survenue lors de l'insertion des questions de la diffusion : ", error)
         return False
 
 
@@ -165,7 +166,7 @@ def archivesReponses(reponse_etudiant, id_diffusion):
         return save
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de l'insertion de la diffusion : ", error)
+        print("Une erreur est survenue lors de l'insertion des reponses de la diffusion : ", error)
         return False
 
 
@@ -197,5 +198,5 @@ def saveArchivesReponse(date, est_correcte, reponse, id_etudiant, id_question):
         return True
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de l'insertion de la diffusion : ", error)
+        print("Une erreur est survenue lors de l'insertion de la reponse de la diffusion : ", error)
         return False
