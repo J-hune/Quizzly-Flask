@@ -249,6 +249,3 @@ def getOverallStats(enseignant, nb_jour):
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la sélection des statistiques :", error)
         return False
-
-
-print(getOverallStats(5,1))
