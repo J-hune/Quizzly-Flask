@@ -76,6 +76,35 @@ def countParticipantByDay(cursor, jour, mode_diffusion, enseignant):
         return 0
 
 
+def getArchives(cursor, id_enseignant):
+    try:
+
+        cursor.execute("SELECT AD.id, AD.titre, AD.code, AD.date, AD.mode COUNT(DISTINCT AR.etudiant), COUNT(AR.id), SUM(AR.est_correcte) \
+                        FROM ArchivesDiffusions AD \
+                        JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
+                        JOIN ArchivesReponses AR ON AQ.id = AR.question \
+                        WHERE enseignant = ? ORDER BY AD.date ;",(id_enseignant, ))
+        result = cursor.fetchall()
+
+        print(result)
+        archives = []
+        for i in range(len(result)):
+            data = {"archiveId": result[i][0],
+                    "title": result[i][1],
+                    "id": result[i][2],
+                    "date": result[i][3],
+                    "mode": result[i][4],
+                    "participantCount": result[i][5],
+                    "percentCorrect": (result[i][7]/result[i][6])*100
+                    }
+            archives.append(data)
+        return archives
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélection de l'archive :", error)
+        return 0
+
+
 # Renvoie un dictionnaire avec toutes les statistiques générales sur les diffusions de l'enseignant
 # Param : - enseignant : l'id de l'enseignant (int)
 #         - nb_jour : le nombre de jours à calculer par rapport à aujourd'hui (int)
@@ -114,7 +143,8 @@ def getOverallStats(enseignant, nb_jour):
             "participantsQuestions": [],
             "totalQuestions": total[1],
             "totalQuiz": total[0],
-            "pourcentage": countTotalPourcentage(cursor, enseignant)
+            "pourcentage": countTotalPourcentage(cursor, enseignant),
+            "archives": getArchives(cursor, enseignant)
         }
 
         # Compte le nombre de participants aux diffusions pour les "nb_jour" dernier jour, et l'ajoute à data
