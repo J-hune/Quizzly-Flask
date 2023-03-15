@@ -76,17 +76,29 @@ def countParticipantByDay(cursor, jour, mode_diffusion, enseignant):
         return 0
 
 
-def getArchives(cursor, id_enseignant):
+# Récupère toutes les archives des anciennes diffusions (quiz) d'un enseignant
+# Param : - cursor : cursor de la BDD
+#         - enseignant : id de l'enseignant (int)
+# Return : un tableau de dico avec les archives des quiz
+#           [
+#            { "archiveId": 1, "title": "Séquence algorithmie", "id": "Fxa4t3xr", "date": 1678667302, "participantCount": 15, "percentCorrect": 42 },
+#            { "archiveId": 2, "title": "Les questions de sciences", "id": "Gxa4t3xr", "date": 1678667402, "participantCount": 15, "percentCorrect": 32},
+#            {...}, ...
+#           ]
+def getArchives(cursor, enseignant):
     try:
-
-        cursor.execute("SELECT AD.id, AD.titre, AD.code, AD.date, AD.mode COUNT(DISTINCT AR.etudiant), COUNT(AR.id), SUM(AR.est_correcte) \
+        # Récupère l'id du quizz, son titre, son code, sa date, son mode, le nombre de participant et le pourcentage de bonne réponse
+        #                                                                       nbParticipant             nbRéponse        nbBonneRéponse
+        cursor.execute("SELECT AD.id, AD.titre, AD.code, AD.date, AD.mode, COUNT(DISTINCT AR.etudiant), COUNT(AR.id), SUM(AR.est_correcte) \
                         FROM ArchivesDiffusions AD \
                         JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
                         JOIN ArchivesReponses AR ON AQ.id = AR.question \
-                        WHERE enseignant = ? ORDER BY AD.date ;",(id_enseignant, ))
+                        WHERE enseignant = ? \
+                        GROUP BY AD.id \
+                        ORDER BY AD.date DESC;",(enseignant, ))
         result = cursor.fetchall()
 
-        print(result)
+        # Ordonne les données dans un tableau de dico pour chaque quiz
         archives = []
         for i in range(len(result)):
             data = {"archiveId": result[i][0],
@@ -98,10 +110,11 @@ def getArchives(cursor, id_enseignant):
                     "percentCorrect": (result[i][7]/result[i][6])*100
                     }
             archives.append(data)
+
         return archives
 
     except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la sélection de l'archive :", error)
+        print("Une erreur est survenue lors de la sélection des archives des quiz :", error)
         return 0
 
 
@@ -132,8 +145,6 @@ def getOverallStats(enseignant, nb_jour):
 
         # Active les clés étrangères
         cursor.execute("PRAGMA foreign_keys = ON")
-
-
 
         # Compte le nombre total de diffusions de question et de quiz (diffusion), puis ordonne les données
         total = countTotalQuiz(cursor, enseignant)
