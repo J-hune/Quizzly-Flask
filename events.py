@@ -344,6 +344,7 @@ def createRoomQuestion(question_id):
             'name': room_id,
             'titre': getQuestion(question_id)["enonce"],
             'enseignant': request.sid,
+            'id_enseignant': session["user"]["id"],
             'mode': 'question',
             'etudiants': [],
             "questions": [question_id],
