@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, session
 import functions.statistics.overall
+from functions.statistics.save import removeDiffusion
 
 statistics = Blueprint('statistics', __name__, url_prefix='/statistics')
 
@@ -34,6 +35,33 @@ def getOverallStats(nb=120):
                 "status": 400,
                 "reason": "Échec de la requête"
             }), 400
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "La connection a échouée"
+        }), 400
+
+
+@statistics.route('/removeDiffusion/<id>', methods=['GET'])
+def removeDiffusion(id):
+    # Vérifie que l'utilisateur est en session
+    if 'user' in session:
+        # Vérifie qu'il est un enseignant
+        if session["user"]["type"] == "Enseignant":
+                if functions.statistics.save.removeDiffusion(id, session["user"]["id"]):
+                    return jsonify(success=True), 200
+                else:
+                    return jsonify({
+                        "status": 400,
+                        "reason": "Échec de la requête"
+                    }), 400
+        # Ce n'est pas un enseignant
+        else:
+            return jsonify({
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
+    # Pas en session
     else:
         return jsonify({
             "status": 400,

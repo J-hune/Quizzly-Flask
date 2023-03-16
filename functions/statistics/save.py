@@ -269,3 +269,29 @@ def addEstCorrecte(tableau_reponses_etudiants, reponse_juste_question):
                     else:
                         tableau_reponses_etudiants[j]['est_correcte'] = 0
     return tableau_reponses_etudiants
+
+
+# Supprime l'archive de la diffusion
+# Param : id_diffusion : id de la diffusion a supprimé (int)
+#         id_enseignant : id de l'enseignant qui possède l'archive
+def removeDiffusion(id_diffusion, id_enseignant):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
+        # Suppression de la séquence (update on cascade supprime les liens)
+        cursor.execute("DELETE FROM ArchivesDiffusions WHERE id = ? AND enseignant=?;", (id_diffusion, id_enseignant))
+        conn.commit()
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return True
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la suppression de la séquence :", error)
+        return False
