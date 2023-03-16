@@ -1,5 +1,6 @@
 import sqlite3
-from werkzeug.security import generate_password_hash
+from flask import session
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 # Ajoute les étudiants en paramètre dans la BDD
