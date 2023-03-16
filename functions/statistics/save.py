@@ -16,8 +16,8 @@ from functions.questions import getQuestion
 #      'derQuestionTraitee': objet de type question,
 #      'stopReponses': False,
 #      'reponsesEtudiant': [
-#          {'id': 22100000, 'question': 6, 'answer': 20,'date':1678558000, 'est_correcte': 0},
-#          {'id': 22100000, 'question': 18, 'answer': [33],'date':1678558989, 'est_correcte': 0}
+#          {'id': 22100000, 'question': 6, 'answer': 20,'date':1678558000},
+#          {'id': 22100000, 'question': 18, 'answer': [33],'date':1678558989}
 #      ],
 #      'date':1678558957
 # }
@@ -32,12 +32,30 @@ def saveDiffusions(sequence):
     # Récupère les id des questions utilisées lors de la diffusion
     tableau_questions = sequence["copieQuestions"]
 
+    # Tableau qui contient des dictionnaires de questions sous cette forme {'id': 6, 'numerique': 206.0} (avec que les bonnes réponses pour un QCM)
+    reponse_juste_question = []
     # Insère les données des questions dans la table d'archive des questions
     for i in range(len(tableau_questions)):
-        saveArchivesQuestions(tableau_questions[i], diffusion_id)
+        # Appel a une fonction pour récupérer toutes les données de la question
+        data_question = getQuestion(tableau_questions[i])
 
-    # Récupère les infos et réponses des étudiants qui ont participé à la diffusion
-    tableau_reponses_etudiants = sequence["reponsesEtudiant"]
+        # Enregistrer en base de donnée les données de la question
+        saveArchivesQuestions(data_question, diffusion_id)
+
+        # Extrait juste les bonnes réponses et l'id de la question
+        if data_question["type"]==0:
+            reponse_juste_question.append({
+                "id": data_question["id"],
+                "reponse": [r['id'] for r in data_question['reponses'] if r['reponseJuste']]
+            })
+        else:
+            reponse_juste_question.append({
+                "id": data_question["id"],
+                "numerique": float(data_question["numerique"])
+            })
+
+    # Récupère les infos et réponses des étudiants qui ont participé à la diffusion, et ajoute s'il a correcte ou pas a la question
+    tableau_reponses_etudiants = addEstCorrecte(sequence["reponsesEtudiant"],reponse_juste_question)
 
     # Insère les données des réponses dans la table d'archive des réponses
     for i in range(len(tableau_reponses_etudiants)):
@@ -86,16 +104,13 @@ def saveArchivesDiffusion(date, mode, enseignant, titre, code):
 
 
 # Ajoute la question dans les archives des questions
-# Param : - id_question : id de la question à ajouter (int)
+# Param : - question : dictionnaire issu de la fonction getQuestion (dico)
 #         - id_diffusion : id de la diffusion lier à la question (int)
 # Return : Si ajout de la question :
 #               True
 #           Sinon :
 #               False en cas d'échec
-def saveArchivesQuestions(id_question, id_diffusion):
-
-    # Appel a une fonction pour récupérer toutes les données de la question
-    data_question = getQuestion(id_question)
+def saveArchivesQuestions(data_question, id_diffusion):
     if not data_question:
         return False
 
@@ -200,3 +215,57 @@ def saveArchivesReponse(date, est_correcte, reponse, id_etudiant, id_question):
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de l'insertion de la reponse de la diffusion : ", error)
         return False
+
+
+# Permet de verifier si l'étudiant a eu la bonne réponse aux différentes questions
+# Param : tableau_reponses_etudiants : un tableau contenant les réponses de tous les étudiants
+#         [
+#          {'id': 22100000, 'question': 6, 'answer': 20,'date':1678558000},
+#          {'id': 22100000, 'question': 18, 'answer': [33],'date':1678558989}
+#           ]
+#           reponse_juste_question : tableau de question contenant les bonnes réponses de la question
+#           [
+#           {'id': 6, 'numerique': 206.0},
+#           {'id': 18, 'reponse': [34]}
+#           ]
+# Return : le même tableau, mais en ajoutant si l'étudiant a eu correcte aux questions
+#           [
+#           {'id': 22100000, 'question': 6, 'answer': 20,'date':1678558000, 'est_correcte': 0},
+#           {'id': 22100000, 'question': 18, 'answer': [33],'date':1678558989, 'est_correcte': 0}
+#           ]
+def addEstCorrecte(tableau_reponses_etudiants, reponse_juste_question):
+
+    # Boucle qui parcourt toutes les questions
+    for i in range(len(reponse_juste_question)):
+
+        # Boucle qui parcourt toutes les réponses des étudiants
+        for j in range(len(tableau_reponses_etudiants)):
+
+            # Verifier si on n'a pas déjà ajouté "est correcte" à cette réponse et si on est sur la question que l'on vérifie
+            if not ('est_correcte' in tableau_reponses_etudiants[j]) and reponse_juste_question[i]["id"] == tableau_reponses_etudiants[j]["question"]:
+                # Si on est sur une question sous forme de QCM
+                if "reponse" in reponse_juste_question[i]:
+
+                    # Si les longueurs des réponses correspondent pour éviter un tour de boucle inutile
+                    if len(tableau_reponses_etudiants[j]['answer']) != len(reponse_juste_question[i]["reponse"]):
+                        tableau_reponses_etudiants[j]['est_correcte'] = 0
+                    else:
+                        k = 0
+                        # Boucle pour savoir si l'étudiant a toutes les bonnes réponses au QCM
+                        while k < len(reponse_juste_question[i]["reponse"]) and reponse_juste_question[i]["reponse"][k] in \
+                                tableau_reponses_etudiants[j]['answer']:
+                            k += 1
+
+                        # On est allé à la fin de la boucle, on a donc la bonne réponse
+                        if k == len(reponse_juste_question[i]["reponse"]):
+                            tableau_reponses_etudiants[j]['est_correcte'] = 1
+                        else:
+                            tableau_reponses_etudiants[j]['est_correcte'] = 0
+                # Sinon, on est sur une question avec une réponse numérique
+                else:
+                    # Comparaison pour voir si on a la bonne réponse ( /!\ ils doivent être du même type)
+                    if tableau_reponses_etudiants[j]['answer'] == reponse_juste_question[i]["numerique"]:
+                        tableau_reponses_etudiants[j]['est_correcte'] = 1
+                    else:
+                        tableau_reponses_etudiants[j]['est_correcte'] = 0
+    return tableau_reponses_etudiants

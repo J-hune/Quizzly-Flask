@@ -26,8 +26,8 @@ sequenceEnCours = {}  # Les données de ce tableau peuvent servir pour les stats
 #      'derQuestionTraitee': objet de type question,
 #      'stopReponses': False,
 #      'reponsesEtudiant': [
-#          {'id': 22100000, 'question': 6, 'answer': 20,'date':1678558000, 'est_correcte': 0},
-#          {'id': 22100000, 'question': 18, 'answer': [33],'date':1678558989, 'est_correcte': 0}
+#          {'id': 22100000, 'question': 6, 'answer': 20,'date':1678558000},
+#          {'id': 22100000, 'question': 18, 'answer': [33],'date':1678558989}
 #      ],
 #      'date':1678558957
 #  }
@@ -190,37 +190,9 @@ def askCorrection():
                 reponses_justes = [r['id'] for r in question['reponses'] if r['reponseJuste']]
                 emit("renderCorrection", reponses_justes, to=room_id)
 
-                # On ajoute le booleen pour savoir si l'étudiant a eu des bonnes réponses à la question
-                for i in range(len(sequenceEnCours[room_id]["reponsesEtudiant"])):
-
-                    # Si on n'a pas déjà verifier cette question
-                    if not ('est_correcte' in sequenceEnCours[room_id]["reponsesEtudiant"][i]):
-                        # Si les longueurs des réponses correspondent pour éviter un tour de boucle inutile
-                        if len(sequenceEnCours[room_id]["reponsesEtudiant"][i]['answer']) != len(reponses_justes):
-                            sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 0
-                        else:
-                            j = 0
-                            # Boucle pour savoir si l'étudiant a toutes les bonnes réponses au QCM
-                            while j < len(reponses_justes) and reponses_justes[j] in sequenceEnCours[room_id]["reponsesEtudiant"][i]['answer']:
-                                j += 1
-                            if j == len(reponses_justes):
-                                sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 1
-                            else:
-                                sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 0
-
             elif question['type'] == 1:
                 numerique = question['numerique']
                 emit("renderCorrection", numerique, to=room_id)
-
-                # On ajoute le booleen pour savoir si l'étudiant a eu la bonne réponse à la question
-                for i in range(len(sequenceEnCours[room_id]["reponsesEtudiant"])):
-
-                    # Si on n'a pas déjà verifier cette question
-                    if not ('est_correcte' in sequenceEnCours[room_id]["reponsesEtudiant"][i]):
-                        if sequenceEnCours[room_id]["reponsesEtudiant"][i]['answer'] == numerique:
-                            sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 1
-                        else:
-                            sequenceEnCours[room_id]["reponsesEtudiant"][i]['est_correcte'] = 0
         else:
             emit("error", "La room #" + room_id + " n'existe pas")
     else:
