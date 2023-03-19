@@ -113,13 +113,18 @@ def getStatsByStudent(id, nb=120):
     if 'user' in session:
         nb_jour = int(nb)  # Le convertit en int, car la route GET le donne en string
         stats = functions.statistics.teachers.students.getStatsByStudent(id, session["user"]["id"], nb_jour)
-        if stats:
-            return jsonify(stats)
-        else:
+        if stats == -1:
             return jsonify({
                 "status": 400,
                 "reason": "Échec de la requête"
             }), 400
+        elif stats == 0:
+            return jsonify({
+                "status": 400,
+                "reason": "L'étudiant n'existe pas"
+            }), 400
+        else:
+            return jsonify(stats)
     else:
         return jsonify({
             "status": 400,

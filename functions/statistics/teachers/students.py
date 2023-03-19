@@ -155,7 +155,7 @@ def getArchives(cursor, etudiant, enseignant):
 # Param : - etudiant : id de l'étudiant (int)
 #         - enseignant : id de l'enseignant (int)
 #         - nb_jour : le nombre de jours à calculer par rapport à aujourd'hui pour les stats temporelles (int)
-# Return : un dico avec les statistiques générales de l'étudiant
+# Return : un dico avec les statistiques générales de l'étudiant (ou -1 si échec requête, ou 0 si étudiant n'existe pas)
 #               {
 #                 "etudiant": {"id": 22104627, "nom": "Bienlebonjour", "prenom": "Ceciestunprenom", "avatar": "data:image/png;base64,iVBORw0KGgo..."}
 #                 "totalQuizzes": 21     (-> nombre de quiz/diffusions participé)
@@ -176,35 +176,37 @@ def getArchives(cursor, etudiant, enseignant):
 #           /!\ chaque index des tableaux correspondent à la même donnée
 #
 def getStatsByStudent(etudiant, enseignant, nb_jour):
-    try:
-        # Connection à la BDD
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
+    if getStudent(etudiant):
+        try:
+            # Connection à la BDD
+            conn = sqlite3.connect('database.db')
+            cursor = conn.cursor()
 
-        # Active les clés étrangères
-        cursor.execute("PRAGMA foreign_keys = ON")
+            # Active les clés étrangères
+            cursor.execute("PRAGMA foreign_keys = ON")
 
-        globalstats_and_archives = getArchives(cursor, etudiant, enseignant)
+            globalstats_and_archives = getArchives(cursor, etudiant, enseignant)
 
-        # Ordonne les données dans un dico
-        data = {
-            "etudiant": getStudent(etudiant),
-            "totalQuizzes": globalstats_and_archives[0],
-            "totalQuestions": globalstats_and_archives[1],
-            "successRate": globalstats_and_archives[2],
-            "success": getTemporalStats(cursor, etudiant, enseignant, nb_jour),
-            "archives": globalstats_and_archives[3]
-        }
+            # Ordonne les données dans un dico
+            data = {
+                "etudiant": getStudent(etudiant),
+                "totalQuizzes": globalstats_and_archives[0],
+                "totalQuestions": globalstats_and_archives[1],
+                "successRate": globalstats_and_archives[2],
+                "success": getTemporalStats(cursor, etudiant, enseignant, nb_jour),
+                "archives": globalstats_and_archives[3]
+            }
 
-        data["etudiant"]["id"] = etudiant
+            data["etudiant"]["id"] = etudiant
 
-        # Fermeture de la connection
-        cursor.close()
-        conn.close()
+            # Fermeture de la connection
+            cursor.close()
+            conn.close()
 
-        return data
+            return data
 
-    except sqlite3.Error as error:
-        print("Une erreur est survenue lors de la sélection des statistiques de l'étudiant :", error)
-        return False
-
+        except sqlite3.Error as error:
+            print("Une erreur est survenue lors de la sélection des statistiques de l'étudiant :", error)
+            return -1
+    else:
+        return 0
