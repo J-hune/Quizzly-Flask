@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, session
 
 import functions.students
 from functions.students import addStudent, removeStudent
-from functions.sequences import getLastSequences
+from functions.statistics.students.overall import getLastSequences
 
 
 students = Blueprint('student', __name__, url_prefix='/students')
@@ -191,7 +191,7 @@ def getLastSequences():
         # Vérifie qu'il est étudiant
         if session["user"]["type"] == "Etudiant":
             user = session.get("user")
-            last_sequences = functions.sequences.getLastSequences(user["id"])
+            last_sequences = functions.statistics.students.overall.getLastSequences(user["id"])
             if last_sequences != 0:
                 return jsonify(last_sequences)
             # Si l'étudiant n'a participé à aucune séquence

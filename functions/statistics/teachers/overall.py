@@ -180,7 +180,7 @@ def getArchives(cursor, enseignant):
 def getOverallStats(enseignant, nb_jour):
     try:
         # Connection à la BDD
-        conn = sqlite3.connect('database.db')
+        conn = sqlite3.connect('../database.db')
         cursor = conn.cursor()
 
         # Active les clés étrangères

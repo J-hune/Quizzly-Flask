@@ -72,7 +72,6 @@ def saveDiffusions(sequence):
 #             False en cas d'échec
 def saveArchivesDiffusion(date, mode, enseignant, titre, code):
     try:
-
         # Change en booleen le mode pour correspondre à la BDD
         if mode == "question":
             mode = 0
@@ -273,7 +272,7 @@ def addEstCorrecte(tableau_reponses_etudiants, reponse_juste_question):
 
 # Supprime l'archive de la diffusion
 # Param : id_diffusion : id de la diffusion a supprimé (int)
-#         id_enseignant : id de l'enseignant qui possède l'archive
+#         id_enseignant : id de l'enseignant qui possède l'archive (int)
 def removeDiffusion(id_diffusion, id_enseignant):
     try:
         # Connection à la BDD
@@ -283,7 +282,7 @@ def removeDiffusion(id_diffusion, id_enseignant):
         # Active les clés étrangères
         cursor.execute("PRAGMA foreign_keys = ON")
 
-        # Suppression de la séquence (update on cascade supprime les liens)
+        # Suppression de la séquence (update on cascade supprime les archives des questions et réponses liées)
         cursor.execute("DELETE FROM ArchivesDiffusions WHERE id = ? AND enseignant=?;", (id_diffusion, id_enseignant))
         conn.commit()
 

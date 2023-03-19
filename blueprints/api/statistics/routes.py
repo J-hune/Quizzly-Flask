@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, session
-import functions.statistics.overall
+import functions.statistics.teachers.overall
 from functions.statistics.save import removeDiffusion
 
 statistics = Blueprint('statistics', __name__, url_prefix='/statistics')
@@ -13,13 +13,25 @@ statistics = Blueprint('statistics', __name__, url_prefix='/statistics')
 #           participantsSequences[i] ont participé à des séquences et participantsQuestions[i]
 #           ont participé à des questions) /!\
 #
-#              {
-#                "jours": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
-#                "participantsSequences": [10, 20.5, 0, 40, 50],
-#                "participantsQuestions": [2, 0, 4, 50, 0],
-#                "totalQuestions": 10,
-#                "totalSequences": 21
-#              }
+#          {
+#           "totalQuizzes": 21     (-> nombre de quiz/diffusions effectués)
+#           "totalQuestions": 10,  (-> nombre de questions posé)
+#           "successRate": 79      (-> pourcentage de réussite total)
+#           "participation": {     (-> nombre de participant à des questions et séquence pour chaque jour)
+#                             "days": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
+#                             "sequences": [10, 20, 0, 40, 50],
+#                             "questions": [2, 0, 4, 50, 0]
+#                            }
+#           "success": {           (-> taux de réussite pour chaque quiz/diffusion)
+#                       "days": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
+#                       "quiz":[10, 25, 7, 19, 13, 55, 28]
+#                      }
+#           "archives": [          (-> les stats de toutes les quiz/diffusions effectués)
+#                        { "archiveId": 1, "title": "Séquence algorithmie", "id": "Fxa4t3xr", "date": 1678667302, "participantCount": 15, "percentCorrect": 42 },
+#                        { "archiveId": 2, "title": "Les questions de sciences", "id": "Gxa4t3xr", "date": 1678667402, "participantCount": 15, "percentCorrect": 32},
+#                        {...}, ...
+#                       ]
+#         }
 @statistics.route('/getOverallStats', methods=['GET'])
 @statistics.route('/getOverallStats/<nb>', methods=['GET'])
 def getOverallStats(nb=120):
@@ -27,7 +39,7 @@ def getOverallStats(nb=120):
     if 'user' in session:
         # Le convertit en int, car la route GET le donne en string
         nb_jour = int(nb)
-        stats = functions.statistics.overall.getOverallStats(session["user"]["id"],  nb_jour)
+        stats = functions.statistics.teachers.overall.getOverallStats(session["user"]["id"], nb_jour)
         if stats:
             return jsonify(stats)
         else:
@@ -42,6 +54,8 @@ def getOverallStats(nb=120):
         }), 400
 
 
+# Supprime une diffusion des archives
+# Param GET : id de l'archive de diffusion
 @statistics.route('/removeDiffusion/<id>', methods=['GET'])
 def removeDiffusion(id):
     # Vérifie que l'utilisateur est en session
