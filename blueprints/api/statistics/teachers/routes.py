@@ -81,3 +81,47 @@ def removeDiffusion(id):
             "status": 400,
             "reason": "La connection a échouée"
         }), 400
+
+
+# Récupère les statistiques d'un étudiant de l'enseignant
+# Param GET : - id : id de l'étudiant (int)
+#             - nb : le nombre de jours à calculer par rapport à aujourd'hui, de base à 120 (int)
+# Return : un dico avec les statistiques de l'étudiant de l'enseignant
+#               {
+#                 "etudiant": {"id": 22104627, "nom": "Bienlebonjour", "prenom": "Ceciestunprenom", "avatar": "data:image/png;base64,iVBORw0KGgo..."}
+#                 "totalQuizzes": 21     (-> nombre de quiz/diffusions participé)
+#                 "totalQuestions": 10,  (-> nombre de questions répondues)
+#                 "successRate": 79      (-> pourcentage de réussite total)
+#                 "success" = {          (-> les pourcentages de réussite au cours du temps)
+#                              "days": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
+#                              "sequences":[10, 25, 7, 19, 13, 0, 28]
+#                              "questions":[78, 0, 0, 19, 0, 55, 44]
+#                             }
+#                 "archives": [          (-> les stats de toutes les quiz/diffusions effectués)
+#                              { "archiveId": 1, "title": "Séquence algorithmie", "id": "Fxa4t3xr", "date": 1678667302, "participantCount": 15, "percentCorrect": 42 },
+#                              { "archiveId": 2, "title": "Les questions de sciences", "id": "Gxa4t3xr", "date": 1678667402, "participantCount": 15, "percentCorrect": 32},
+#                              {...}, ...
+#                             ]
+#               }
+#
+#           /!\ chaque index des tableaux correspondent à la même donnée
+#
+@teachers.route('/getStatsByStudent/<id>', methods=['GET'])
+@teachers.route('/getStatsByStudent/<id>/<nb>', methods=['GET'])  # Route non utilisée
+def getStatsByStudent(id, nb=120):
+    # Vérifie que l'utilisateur est en session
+    if 'user' in session:
+        nb_jour = int(nb)  # Le convertit en int, car la route GET le donne en string
+        stats = functions.statistics.teachers.students.getStatsByStudent(id, session["user"]["id"], nb_jour)
+        if stats:
+            return jsonify(stats)
+        else:
+            return jsonify({
+                "status": 400,
+                "reason": "Échec de la requête"
+            }), 400
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "La connection a échouée"
+        }), 400
