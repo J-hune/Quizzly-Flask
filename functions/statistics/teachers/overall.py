@@ -100,6 +100,7 @@ def getTemporalStats(cursor, enseignant, nb_jour):
 #               ]
 def getArchives(cursor, enseignant):
     try:
+        # LEFT JOIN pour avoir également les diffusions vides (qui n'ont donc pas de liens avec ArchivesReponses)
         # L'id, le titre, le code, la date, le mode, le nombre de participants, le taux de réussite de chaque quiz
         #                                                                       nbParticipant             nbRéponse     #nbBonneRéponse       nbQuestion
         cursor.execute("SELECT AD.id, AD.titre, AD.code, AD.date, AD.mode, COUNT(DISTINCT AR.etudiant), COUNT(AR.id), SUM(AR.est_correcte), COUNT(DISTINCT AQ.id) \
