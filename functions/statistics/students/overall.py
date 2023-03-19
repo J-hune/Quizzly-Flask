@@ -4,7 +4,8 @@ import sqlite3
 # Renvoie les 3 dernières diffusions auxquelles un étudiant a participé
 # Param : id de l'étudiant
 # Return : les trois dernières diffusions de l'étudiant (tab de dico)
-#               [{"id":7,                           (--> id de la séquence qui a été diffusé)
+#               [{"code":"A2dt8g6B",
+#                 "titre":"Mathématiques",
 #                 "enseignant":"Michel Staelens",
 #                 "participants":25,
 #                 "pourcentage":"82,7",             (--> pourcentage de réussite de l'étudiant)

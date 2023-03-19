@@ -1,9 +1,8 @@
 from flask import Blueprint, jsonify, request, session
 
 import functions.students
-from functions.students import addStudent, removeStudent
+from functions.students import addStudent
 from functions.statistics.students.overall import getLastSequences
-
 
 students = Blueprint('student', __name__, url_prefix='/students')
 

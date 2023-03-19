@@ -19,10 +19,11 @@ from datetime import datetime, time
 #                    "days": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
 #                    "quiz":[10, 25, 7, 19, 13, 55, 28]
 #                   }
-
-#           /!\ chaque index des tableaux correspondent à la même donnée (pour le jour jours[i],
-#               participantsSequences[i] personnes ont participé à des séquences et participantsQuestions[i]
-#               personnes ont participé à des questions)
+#
+#           /!\ chaque index des tableaux correspondent à la même donnée (pour le jour participation["days"][i],
+#               participation["sequences"][i] ont participé à des séquences et participation["questions"][i]
+#               ont participé à des questions)
+#
 def getTemporalStats(cursor, enseignant, nb_jour):
     try:
         jour = datetime.timestamp(datetime.combine(datetime.now(), time.min))  # Date du jour actuel (à minuit pile)
@@ -142,7 +143,9 @@ def getArchives(cursor, enseignant):
 
             archives.append(data)
 
-        taux_reussite_total = taux_reussite_total / nb_quiz_done
+        # S'il a au moins fait un quiz non vide
+        if nb_quiz_done > 0:
+            taux_reussite_total = taux_reussite_total / nb_quiz_done
 
         return nb_quiz, nb_question_total, taux_reussite_total, archives
 
@@ -155,33 +158,33 @@ def getArchives(cursor, enseignant):
 # Param : - enseignant : l'id de l'enseignant (int)
 #         - nb_jour : le nombre de jours à calculer par rapport à aujourd'hui (int)
 # Return : un dico avec les statistiques générales de l'enseignant
+#               {
+#                 "totalQuizzes": 21     (-> nombre de quiz/diffusions effectués)
+#                 "totalQuestions": 10,  (-> nombre de questions posé)
+#                 "successRate": 79      (-> pourcentage de réussite total)
+#                 "participation": {     (-> nombre de participant à des questions et séquence pour chaque jour)
+#                                   "days": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
+#                                   "sequences": [10, 20, 0, 40, 50],
+#                                   "questions": [2, 0, 4, 50, 0]
+#                                  }
+#                 "success": {           (-> taux de réussite pour chaque quiz/diffusion)
+#                             "days": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
+#                             "quiz":[10, 25, 7, 19, 13, 55, 28]
+#                            }
+#                 "archives": [          (-> les stats de toutes les quiz/diffusions effectués)
+#                              { "archiveId": 1, "title": "Séquence algorithmie", "id": "Fxa4t3xr", "date": 1678667302, "participantCount": 15, "percentCorrect": 42 },
+#                              { "archiveId": 2, "title": "Les questions de sciences", "id": "Gxa4t3xr", "date": 1678667402, "participantCount": 15, "percentCorrect": 32},
+#                              {...}, ...
+#                             ]
+#               }
+#           /!\ chaque index des tableaux correspondent à la même donnée (pour le jour participation["days"][i],
+#               participation["sequences"][i] ont participé à des séquences et participation["questions"][i]
+#               ont participé à des questions)
 #
-#          /!\ chaque index des tableaux correspondent à la même donnée (pour le jour jours[i],
-#          participantsSequences[i] ont participé à des séquences et participantsQuestions[i]
-#          ont participé à des questions)
-#       {
-#         "totalQuizzes": 21     (-> nombre de quiz/diffusions effectués)
-#         "totalQuestions": 10,  (-> nombre de questions posé)
-#         "successRate": 79      (-> pourcentage de réussite total)
-#         "participation": {     (-> nombre de participant à des questions et séquence pour chaque jour)
-#                           "days": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
-#                           "sequences": [10, 20, 0, 40, 50],
-#                           "questions": [2, 0, 4, 50, 0]
-#                          }
-#         "success": {           (-> taux de réussite pour chaque quiz/diffusion)
-#                     "days": [1646937600, 1647024000, 1647110400, 1647196800, 1647283200],
-#                     "quiz":[10, 25, 7, 19, 13, 55, 28]
-#                    }
-#         "archives": [          (-> les stats de toutes les quiz/diffusions effectués)
-#                      { "archiveId": 1, "title": "Séquence algorithmie", "id": "Fxa4t3xr", "date": 1678667302, "participantCount": 15, "percentCorrect": 42 },
-#                      { "archiveId": 2, "title": "Les questions de sciences", "id": "Gxa4t3xr", "date": 1678667402, "participantCount": 15, "percentCorrect": 32},
-#                      {...}, ...
-#                     ]
-#       }
 def getOverallStats(enseignant, nb_jour):
     try:
         # Connection à la BDD
-        conn = sqlite3.connect('../database.db')
+        conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
         # Active les clés étrangères
