@@ -19,10 +19,10 @@ def searchLabel(nom):
         conn.close()
 
         # Si l'étiquette est trouvée, on envoie les données
-        if len(result) != 0:
-            return result
-        else:
+        if not result:
             return False
+        else:
+            return result
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la sélection de l'étiquette :", error)
@@ -135,7 +135,8 @@ def getLabels(id):
         cursor.execute("PRAGMA foreign_keys = ON")
 
         # Récupère les étiquettes dans la table
-        result = cursor.execute("SELECT Etiquettes.id, Etiquettes.nom, Etiquettes.couleur FROM Etiquettes WHERE enseignant = ?;", (id,))
+        result = cursor.execute(
+            "SELECT Etiquettes.id, Etiquettes.nom, Etiquettes.couleur FROM Etiquettes WHERE enseignant = ?;", (id,))
         result = result.fetchall()
 
         # Fermeture de la connection
