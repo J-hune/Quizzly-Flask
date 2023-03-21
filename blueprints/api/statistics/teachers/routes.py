@@ -38,15 +38,23 @@ teachers = Blueprint('teachers', __name__, url_prefix='/teachers')
 def getOverallStats(nb=120):
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        nb_jour = int(nb)  # Le convertit en int, car la route GET le donne en string
-        stats = functions.statistics.teachers.overall.getOverallStats(session["user"]["id"], nb_jour)
-        if stats:
-            return jsonify(stats)
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            nb_jour = int(nb)  # Le convertit en int, car la route GET le donne en string
+            stats = functions.statistics.teachers.overall.getOverallStats(session["user"]["id"], nb_jour)
+            if stats:
+                return jsonify(stats)
+            else:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Échec de la requête"
+                }), 400
+        # Ce n'est pas un enseignant
         else:
             return jsonify({
-                "status": 400,
-                "reason": "Échec de la requête"
-            }), 400
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,
@@ -60,7 +68,7 @@ def getOverallStats(nb=120):
 def removeDiffusion(id):
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        # Vérifie qu'il est un enseignant
+        # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
                 if functions.statistics.save.removeDiffusion(id, session["user"]["id"]):
                     return jsonify(success=True), 200
@@ -111,20 +119,28 @@ def removeDiffusion(id):
 def getStatsByStudent(id, nb=120):
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        nb_jour = int(nb)  # Le convertit en int, car la route GET le donne en string
-        stats = functions.statistics.teachers.students.getStatsByStudent(id, session["user"]["id"], nb_jour)
-        if stats == -1:
-            return jsonify({
-                "status": 400,
-                "reason": "Échec de la requête"
-            }), 400
-        elif stats == 0:
-            return jsonify({
-                "status": 400,
-                "reason": "L'étudiant n'existe pas"
-            }), 400
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            nb_jour = int(nb)  # Le convertit en int, car la route GET le donne en string
+            stats = functions.statistics.teachers.students.getStatsByStudent(id, session["user"]["id"], nb_jour)
+            if stats == -1:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Échec de la requête"
+                }), 400
+            elif stats == 0:
+                return jsonify({
+                    "status": 400,
+                    "reason": "L'étudiant n'existe pas"
+                }), 400
+            else:
+                return jsonify(stats)
+        # Ce n'est pas un enseignant
         else:
-            return jsonify(stats)
+            return jsonify({
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,

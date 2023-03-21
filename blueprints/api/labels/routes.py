@@ -12,19 +12,27 @@ label = Blueprint('labels', __name__, url_prefix='/labels')
 def addLabel(name, hexa):
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        user = session.get("user")
-        label_id = fonctionLabels.addLabel(name, hexa, user["id"])
-        # Si l'ajout de l'étiquette a réussi
-        if label_id:
-            return jsonify({
-                "success": True,
-                "id": label_id
-            }), 200
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            user = session.get("user")
+            label_id = fonctionLabels.addLabel(name, hexa, user["id"])
+            # Si l'ajout de l'étiquette a réussi
+            if label_id:
+                return jsonify({
+                    "success": True,
+                    "id": label_id
+                }), 200
+            else:
+                return jsonify({
+                    "status": 401,
+                    "reason": "Impossible d'ajouter l'étiquette"
+                }), 401
+        # Ce n'est pas un enseignant
         else:
             return jsonify({
-                "status": 401,
-                "reason": "Impossible d'ajouter l'étiquette"
-            }), 401
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,
@@ -39,14 +47,22 @@ def addLabel(name, hexa):
 def editLabel():
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        data = request.get_json(force=True)
-        if fonctionLabels.editLabel(data["id"], data["nom"], data["couleur"]):
-            return jsonify(success=True), 200
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            data = request.get_json(force=True)
+            if fonctionLabels.editLabel(data["id"], data["nom"], data["couleur"]):
+                return jsonify(success=True), 200
+            else:
+                return jsonify({
+                    "status": 401,
+                    "reason": "Impossible de modifier l'étiquette"
+                }), 401
+        # Ce n'est pas un enseignant
         else:
             return jsonify({
-                "status": 401,
-                "reason": "Impossible de modifier l'étiquette"
-            }), 401
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,
@@ -60,13 +76,21 @@ def editLabel():
 def deleteLabel(id):
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        if fonctionLabels.deleteLabel(id):
-            return jsonify(success=True), 200
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            if fonctionLabels.deleteLabel(id):
+                return jsonify(success=True), 200
+            else:
+                return jsonify({
+                    "status": 401,
+                    "reason": "Impossible de supprimer l'étiquette"
+                }), 401
+        # Ce n'est pas un enseignant
         else:
             return jsonify({
-                "status": 401,
-                "reason": "Impossible de supprimer l'étiquette"
-            }), 401
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,
@@ -81,9 +105,17 @@ def deleteLabel(id):
 def getLabels():
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        user = session.get("user")
-        labels = fonctionLabels.getLabels(user['id'])
-        return jsonify(labels)
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            user = session.get("user")
+            labels = fonctionLabels.getLabels(user['id'])
+            return jsonify(labels)
+        # Ce n'est pas un enseignant
+        else:
+            return jsonify({
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,

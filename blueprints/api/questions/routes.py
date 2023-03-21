@@ -18,22 +18,29 @@ questions = Blueprint('questions', __name__, url_prefix='/questions')
 def addQuestion():
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        data = request.get_json(force=True)
-        user = session.get("user")
-        if function_questions.addQuestion(
-                data["type"],
-                data["enonce"],
-                user["id"],
-                data["etiquettes"],
-                data["reponses"],
-                data["numerique"]
-        ):
-            return jsonify(success=True), 200
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            data = request.get_json(force=True)
+            user = session.get("user")
+            if function_questions.addQuestion(
+                    data["type"],
+                    data["enonce"],
+                    user["id"],
+                    data["etiquettes"],
+                    data["reponses"],
+                    data["numerique"]
+            ):
+                return jsonify(success=True), 200
+            else:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Ajout des données impossible"
+                }), 400
         else:
             return jsonify({
-                "status": 400,
-                "reason": "Ajout des données impossible"
-            }), 400
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,
@@ -56,21 +63,29 @@ def addQuestion():
 def editQuestion(id):
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        data = request.get_json(force=True)
-        if function_questions.editQuestion(
-                id,
-                data["type"],
-                data["enonce"],
-                data["etiquettes"],
-                data["reponses"],
-                data["numerique"]
-        ):
-            return jsonify(success=True), 200
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            data = request.get_json(force=True)
+            if function_questions.editQuestion(
+                    id,
+                    data["type"],
+                    data["enonce"],
+                    data["etiquettes"],
+                    data["reponses"],
+                    data["numerique"]
+            ):
+                return jsonify(success=True), 200
+            else:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Ajout des données impossible"
+                }), 400
+        # Ce n'est pas un enseignant
         else:
             return jsonify({
-                "status": 400,
-                "reason": "Ajout des données impossible"
-            }), 400
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,
@@ -84,13 +99,21 @@ def editQuestion(id):
 def deleteQuestion(id):
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        if function_questions.deleteQuestion(id):
-            return jsonify(success=True), 200
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            if function_questions.deleteQuestion(id):
+                return jsonify(success=True), 200
+            else:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Impossible de supprimer la question"
+                }), 400
+        # Ce n'est pas un enseignant
         else:
             return jsonify({
-                "status": 400,
-                "reason": "Impossible de supprimer la question"
-            }), 400
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,
@@ -116,9 +139,17 @@ def deleteQuestion(id):
 def getQuestions(label=None):
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        user = session.get("user")
-        questions = function_questions.getQuestions(user['id'], label)
-        return jsonify(questions)
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            user = session.get("user")
+            questions = function_questions.getQuestions(user['id'], label)
+            return jsonify(questions)
+        # Ce n'est pas un enseignant
+        else:
+            return jsonify({
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,
@@ -142,13 +173,21 @@ def getQuestions(label=None):
 def getQuestion(id):
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
-        question = function_questions.getQuestion(id)
-        if not question:
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            question = function_questions.getQuestion(id)
+            if not question:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Question non valide"
+                }), 400
+            return jsonify(question)
+        # Ce n'est pas un enseignant
+        else:
             return jsonify({
-                "status": 400,
-                "reason": "Question non valide"
-            }), 400
-        return jsonify(question)
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
     else:
         return jsonify({
             "status": 400,
