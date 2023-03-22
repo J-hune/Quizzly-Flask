@@ -182,7 +182,7 @@ def getSequence(id):
 
 # Récupère toutes les séquences d'un enseignant
 # Param : l'id de l'enseignant (int)
-# Return : les informations de la séquence (dico)
+# Return : les informations de la séquence (dico) ou False si échec de la requête
 #            [{"id":1,
 #             "titre":"Les Array list en java",
 #             "questions":[6, 18]}
@@ -201,51 +201,41 @@ def getAllSequences(id_enseignant):
         result = cursor.execute("SELECT id, titre FROM Sequences WHERE enseignant=?;", (id_enseignant,))
         result = result.fetchall()
 
-        if result:
-            sequences = []
-            for k in range(len(result)):
-                dico_result = {
-                    "id": result[k][0],
-                    "titre": result[k][1],
-                    "questions": []
-                }
+        # Pour chaque séquence
+        data = []
+        for k in range(len(result)):
+            sequence = {
+                "id": result[k][0],
+                "titre": result[k][1],
+                "questions": [],
+                "listeEtiquettes": []
+            }
 
-                # Tableau qui contient les etiquettes
-                liste_etiquette = []
-                # Tableau qui contient les noms des etiquettes deja ajouté pour pas de doublon
-                liste_etiquette_nom_ajoute = []
+            etiquette_added = []  # Contient les noms des étiquettes déjà ajoutées, pour enlever les doublons
 
-                # Requetes SQL pour récupérer les id des questions de la sequence
-                result_request_question = cursor.execute(
-                    "SELECT idQuestion FROM liensSequencesQuestions WHERE idSequence=?;", (dico_result["id"],))
-                result_request_question = result_request_question.fetchall()
-                # On crée un tableau pour les questions
-                dico_result["questions"] = []
-                for i in range(len(result_request_question)):
-                    # On ajoute les id de chaque question
-                    dico_result["questions"].append(result_request_question[i][0])
+            # Sélection des id des questions liées à la sequence
+            result_question = cursor.execute("SELECT idQuestion FROM liensSequencesQuestions WHERE idSequence=?;",
+                                             (sequence["id"],))
+            result_question = result_question.fetchall()
 
-                    # Appel a la fonction pour récupérer toutes les étiquettes associées à la question
-                    liste_etiquette_question = getLiensEtiquettes(result_request_question[i][0])
-                    for j in range(len(liste_etiquette_question)):
-                        # On ajoute les étiquettes que si on ne les a pas
-                        if not (liste_etiquette_question[j]["nom"] in liste_etiquette_nom_ajoute):
-                            liste_etiquette_nom_ajoute.append(liste_etiquette_question[j]["nom"])
-                            liste_etiquette.append(liste_etiquette_question[j])
-                dico_result["listeEtiquettes"] = liste_etiquette
-                # On ajoute notre beau dico au tableau
-                sequences.append(dico_result)
-            conn.commit()
-            # Fermeture de la connection
-            cursor.close()
-            conn.close()
-            return sequences
-        else:
+            # Pour chaque question
+            for i in range(len(result_question)):
+                sequence["questions"].append(result_question[i][0])  # On ajoute l'id de la question
+                result_etiquette = getLiensEtiquettes(result_question[i][0])  # Récupère les étiquettes de la question
 
-            # Fermeture de la connection
-            cursor.close()
-            conn.close()
-            return False
+                # Pour chaque étiquette
+                for j in range(len(result_etiquette)):
+                    # On ajoute l'étiquette si elle n'y est pas encore
+                    if not (result_etiquette[j]["nom"] in etiquette_added):
+                        etiquette_added.append(result_etiquette[j]["nom"])
+                        sequence["listeEtiquettes"].append(result_etiquette[j])
+
+            data.append(sequence)  # On ajoute notre beau dico au tableau
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return data
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la sélection des séquences :", error)
