@@ -108,7 +108,7 @@ def addQuestion(question_type, enonce, enseignant, etiquettes, reponses, numeriq
 #                 "numerique": ""
 #                 "reponses": [{"id": 1, "question": 1, "reponse": "Ératosthène", "reponseJuste": 1},...],
 #               }
-def getQuestion(id):
+def getQuestion(id, id_enseignant):
     try:
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
@@ -116,7 +116,7 @@ def getQuestion(id):
 
         # Récupère la question
         result = cursor.execute("SELECT Questions.id, Questions.enonce, Questions.enseignant, Questions.type, Questions.numerique \
-                                    FROM Questions WHERE id = ?;", (id,))
+                                    FROM Questions WHERE id = ? AND enseignant = ?;", (id,id_enseignant))
         result = result.fetchone()
 
         if not result:

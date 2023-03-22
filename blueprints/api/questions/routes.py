@@ -66,21 +66,28 @@ def editQuestion(id):
         # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
             data = request.get_json(force=True)
-            if function_questions.editQuestion(
-                    id,
-                    data["type"],
-                    data["enonce"],
-                    data["etiquettes"],
-                    data["reponses"],
-                    data["numerique"],
-                    session["user"]["id"]
-            ):
-                return jsonify(success=True), 200
+            # Vérifie si la question existe et qu'elle lui appartient
+            if function_questions.getQuestion(id, session["user"]["id"]):
+                if function_questions.editQuestion(
+                        id,
+                        data["type"],
+                        data["enonce"],
+                        data["etiquettes"],
+                        data["reponses"],
+                        data["numerique"],
+                        session["user"]["id"]
+                ):
+                    return jsonify(success=True), 200
+                else:
+                    return jsonify({
+                        "status": 400,
+                        "reason": "Ajout des données impossible"
+                    }), 400
             else:
                 return jsonify({
-                    "status": 400,
-                    "reason": "Ajout des données impossible"
-                }), 400
+                    "status": 403,
+                    "reason": "Cette question ne vous appartient pas ou n'existe pas"
+                }), 403
         # Ce n'est pas un enseignant
         else:
             return jsonify({
@@ -102,13 +109,20 @@ def deleteQuestion(id):
     if 'user' in session:
         # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
-            if function_questions.deleteQuestion(id):
-                return jsonify(success=True), 200
+            # Vérifie si la question existe et qu'elle lui appartient
+            if function_questions.getQuestion(id, session["user"]["id"]):
+                if function_questions.deleteQuestion(id):
+                    return jsonify(success=True), 200
+                else:
+                    return jsonify({
+                        "status": 400,
+                        "reason": "Impossible de supprimer la question"
+                    }), 400
             else:
                 return jsonify({
-                    "status": 400,
-                    "reason": "Impossible de supprimer la question"
-                }), 400
+                    "status": 403,
+                    "reason": "Cette question ne vous appartient pas ou n'existe pas"
+                }), 403
         # Ce n'est pas un enseignant
         else:
             return jsonify({
@@ -176,7 +190,7 @@ def getQuestion(id):
     if 'user' in session:
         # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
-            question = function_questions.getQuestion(id)
+            question = function_questions.getQuestion(id, session["user"]["id"])
             if not question:
                 return jsonify({
                     "status": 400,

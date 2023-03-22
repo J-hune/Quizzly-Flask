@@ -144,7 +144,7 @@ def nextQuestion():
         if room_id in sequenceEnCours:
 
             # On récupère la première question
-            question = getQuestion(sequenceEnCours[room_id]["questions"].pop(0))
+            question = getQuestion(sequenceEnCours[room_id]["questions"].pop(0), session["user"]["id"])
 
             # On modifie derQuestionTraitee avec une copie profonde de question
             sequenceEnCours[room_id]["derQuestionTraitee"] = copy.deepcopy(question)
@@ -314,7 +314,7 @@ def createRoomQuestion(question_id):
         # diffusion avec toutes les informations utiles aux echanges de reponses et questions
         sequenceEnCours[room_id] = {
             'name': room_id,
-            'titre': getQuestion(question_id)["enonce"],
+            'titre': getQuestion(question_id, session["user"]["id"])["enonce"],
             'enseignant': request.sid,
             'id_enseignant': session["user"]["id"],
             'mode': 'question',
