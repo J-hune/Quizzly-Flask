@@ -5,10 +5,15 @@ teachers = Blueprint('teachers', __name__, url_prefix='/teachers')
 
 
 # Créer le compte d'un enseignant et le met en session
-# Param POST : les infos de connection de l'enseignant
+# Param POST : les infos de registration de l'enseignant (dico)
 #               {"firstname": "Matéo",
 #                "surname": "Avventuriero",
 #                "password": "DoctorWhoCestCool"}
+# Return : les infos de l'enseignant (session["user"])
+#               {"id": 42
+#                "firstname": "Matéo",
+#                "surname": "Avventuriero",
+#                "type": "Enseignant"}
 @teachers.route('/signup', methods=['POST'])
 def signup():
     # Récupère les données en POST
@@ -24,15 +29,29 @@ def signup():
             "reason": "Prénom, nom ou mot de passe invalide"
         }), 401
     else:
-        registerTeacher(firstname, surname, password)
-        return jsonify(success=True), 200
+        teacher = registerTeacher(firstname, surname, password)
+        if teacher == 0:
+            return jsonify({
+                "status": 400,
+                "reason": "Échec de la requête"
+            }), 400
+        else:
+            return jsonify({
+                "success": True,
+                "user": teacher
+            }), 200
 
 
 # Met en session un enseignant
-# Param POST : les infos de connection de l'enseignant
+# Param POST : les infos de connexion de l'enseignant (dico)
 #               {"firstname": "Hugo",
 #                "surname": "Vaillant",
 #                "password": "StarWarsCestNul"}
+# Return : les infos de l'enseignant (session["user"])
+#               {"id": 13
+#                "firstname": "Hugo",
+#                "surname": "Vaillant",
+#                "type": "Enseignant"}
 @teachers.route('/signin', methods=['POST'])
 def signin():
     # Récupère les données en POST
