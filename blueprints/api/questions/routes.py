@@ -72,7 +72,8 @@ def editQuestion(id):
                     data["enonce"],
                     data["etiquettes"],
                     data["reponses"],
-                    data["numerique"]
+                    data["numerique"],
+                    session["user"]["id"]
             ):
                 return jsonify(success=True), 200
             else:
