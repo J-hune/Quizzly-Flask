@@ -18,7 +18,7 @@ def addLinksQuestionLabels(conn, cursor, id, etiquettes, enseignant):
             result = result.fetchone()
             cursor.execute("INSERT INTO liensEtiquettesQuestions (question, etiquette) VALUES(?,?);", (id, result[0]))
             conn.commit()
-            return True
+        return True
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question :", error)
