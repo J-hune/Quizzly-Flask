@@ -7,6 +7,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # Param : - firstname : prénom de l'enseignant (string)
 #         - surname : nom de l'enseignant (string)
 #         - password : mot de passe de l'enseignant (string)
+# Return : les infos de l'enseignant (dico) ou False si échec de la requête
+#               {"id": 0,
+#                "firstname": "Livio",
+#                "surname": "Nortes-Bousquet",
+#                "type": "Enseignant"}
 def registerTeacher(firstname, surname, password):
     try:
         # On enlève les espaces
@@ -36,24 +41,22 @@ def registerTeacher(firstname, surname, password):
         # Fermeture de la connection
         cursor.close()
         conn.close()
-        return True
+        return session["user"]
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de l'insertion de l'enseignant :", error)
-        return -1
+        return 0
 
 
 # Renvoie les infos de l'enseignant s'il existe en BDD et l'ajoute en session si tel est le cas
 # Param : - firstname : prénom de l'enseignant (string)
 #         - surname : nom de l'enseignant (string)
 #         - password : mot de passe de l'enseignant (string)
-# Return : les infos de l'enseignant (dico) ou False
-#               {
-#                "id": "1",
+# Return : les infos de l'enseignant (dico) ou False si échec de la requête
+#               {"id": "1",
 #                "firstname": "Donovann",
 #                "surname": "Zassot",
-#                "type": "Enseignant"
-#               }
+#                "type": "Enseignant"}
 def teacherExists(firstname, surname, password):
     try:
         # On enlève les espaces
