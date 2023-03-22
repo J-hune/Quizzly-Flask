@@ -18,7 +18,7 @@ def addLinksQuestionLabels(conn, cursor, id, etiquettes, enseignant):
             result = result.fetchone()
             cursor.execute("INSERT INTO liensEtiquettesQuestions (question, etiquette) VALUES(?,?);", (id, result[0]))
             conn.commit()
-            return True
+        return True
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la création du lien entre l'étiquette et la question :", error)
@@ -108,7 +108,7 @@ def addQuestion(question_type, enonce, enseignant, etiquettes, reponses, numeriq
 #                 "numerique": ""
 #                 "reponses": [{"id": 1, "question": 1, "reponse": "Ératosthène", "reponseJuste": 1},...],
 #               }
-def getQuestion(id):
+def getQuestion(id, id_enseignant):
     try:
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
@@ -116,7 +116,7 @@ def getQuestion(id):
 
         # Récupère la question
         result = cursor.execute("SELECT Questions.id, Questions.enonce, Questions.enseignant, Questions.type, Questions.numerique \
-                                    FROM Questions WHERE id = ?;", (id,))
+                                    FROM Questions WHERE id = ? AND enseignant = ?;", (id,id_enseignant))
         result = result.fetchone()
 
         if not result:
@@ -250,7 +250,7 @@ def getReponses(id):
 #                               {"reponse": "EpicGames", "reponseJuste": False}, ...
 #                             ]
 #         - numérique : la réponse numérique (string)
-def editQuestion(id, question_type, enonce, etiquettes, reponses, numerique):
+def editQuestion(id, question_type, enonce, etiquettes, reponses, numerique, id_enseignant):
     try:
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
@@ -271,13 +271,8 @@ def editQuestion(id, question_type, enonce, etiquettes, reponses, numerique):
                         WHERE id = ?;", (question_type, enonce, numerique, id))
         conn.commit()
 
-        ###TEMPORAIRE /!\
-        result = cursor.execute("SELECT enseignant FROM Questions WHERE id=?;", (id,)) ###CECI N'EST PAS OPTI
-        id_prof = result.fetchone()
-        ###TEMPORAIRE /!\
-
         # Ajout des liens entre les étiquettes et les questions et ajoute les réponses
-        addLinksQuestionLabels(conn, cursor, id, etiquettes, id_prof[0])
+        addLinksQuestionLabels(conn, cursor, id, etiquettes, id_enseignant)
         addReponses(conn, cursor, id, reponses)
 
         # Fermeture de la connection

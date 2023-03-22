@@ -37,7 +37,7 @@ def saveDiffusions(sequence):
     # Insère les données des questions dans la table d'archive des questions
     for i in range(len(tableau_questions)):
         # Appel a une fonction pour récupérer toutes les données de la question
-        data_question = getQuestion(tableau_questions[i])
+        data_question = getQuestion(tableau_questions[i], sequence["id_enseignant"])
 
         # Enregistrer en base de donnée les données de la question
         saveArchivesQuestions(data_question, diffusion_id)

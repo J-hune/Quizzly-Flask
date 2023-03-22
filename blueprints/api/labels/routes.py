@@ -42,7 +42,7 @@ def addLabel(name, hexa):
 
 # Modifie une étiquette
 # Param POST : un dico avec les nouvelles infos
-#               {"id": 1, "nom": Python", "FFFF00"}
+#               {"id": 1, "nom": Python", "couleur": "FFFF00"}
 @label.route('/editLabel', methods=['POST'])
 def editLabel():
     # Vérifie que l'utilisateur est en session
@@ -50,13 +50,20 @@ def editLabel():
         # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
             data = request.get_json(force=True)
-            if fonctionLabels.editLabel(data["id"], data["nom"], data["couleur"]):
-                return jsonify(success=True), 200
+            # Vérifie si l'étiquette existe et qu'elle lui appartient
+            if fonctionLabels.searchLabelWithId(data["id"], session["user"]["id"]):
+                if fonctionLabels.editLabel(data["id"], data["nom"], data["couleur"]):
+                    return jsonify(success=True), 200
+                else:
+                    return jsonify({
+                        "status": 401,
+                        "reason": "Impossible de modifier l'étiquette"
+                    }), 401
             else:
                 return jsonify({
-                    "status": 401,
-                    "reason": "Impossible de modifier l'étiquette"
-                }), 401
+                    "status": 403,
+                    "reason": "Cette etiquette ne vous appartient pas ou n'existe pas"
+                }), 403
         # Ce n'est pas un enseignant
         else:
             return jsonify({
@@ -78,13 +85,20 @@ def deleteLabel(id):
     if 'user' in session:
         # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
-            if fonctionLabels.deleteLabel(id):
-                return jsonify(success=True), 200
+            # Vérifie si l'étiquette existe et qu'elle lui appartient
+            if fonctionLabels.searchLabelWithId(id, session["user"]["id"]):
+                if fonctionLabels.deleteLabel(id):
+                    return jsonify(success=True), 200
+                else:
+                    return jsonify({
+                        "status": 401,
+                        "reason": "Impossible de supprimer l'étiquette"
+                    }), 401
             else:
                 return jsonify({
-                    "status": 401,
-                    "reason": "Impossible de supprimer l'étiquette"
-                }), 401
+                    "status": 403,
+                    "reason": "Cette etiquette ne vous appartient pas ou n'existe pas"
+                }), 403
         # Ce n'est pas un enseignant
         else:
             return jsonify({

@@ -2,16 +2,17 @@ import sqlite3
 
 
 # Récupère une étiquette avec le nom (permet aussi de vérifier si cette étiquette existe)
-# Param : nom de l'étiquette (string)
+# Param : - nom de l'étiquette (string)
+#         - id de l'enseignant (int)
 # Return : les infos de l'étiquette (tuple)
-def searchLabel(nom):
+def searchLabelWithName(nom, id_enseignant):
     try:
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
         # Récupère l'étiquette
-        result = cursor.execute("SELECT * FROM Etiquettes WHERE nom= ?;", (nom,))
+        result = cursor.execute("SELECT * FROM Etiquettes WHERE nom = ? AND enseignant = ?;", (nom, id_enseignant))
         result = result.fetchone()
 
         # Fermeture de la connection
@@ -29,13 +30,41 @@ def searchLabel(nom):
         return False
 
 
+# Récupère une étiquette avec son id (permet aussi de vérifier si cette étiquette existe)
+# Param : id de l'étiquette (int)
+# Return : les infos de l'étiquette (tuple)
+def searchLabelWithId(id_etiquette, id_enseignant):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Récupère l'étiquette
+        result = cursor.execute("SELECT * FROM Etiquettes WHERE id = ? AND enseignant = ?;", (id_etiquette, id_enseignant))
+        result = result.fetchone()
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+
+        # Si l'étiquette est trouvée, on envoie les données
+        if not result:
+            return False
+        else:
+            return result
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélection de l'étiquette : ", error)
+        return False
+
+
 # Ajoute une étiquette
 # Param : - nom : nom de l'étiquette (string)
 #         - couleur : couleur de l'étiquette en hexa (string)
 #         - id_enseignant : id du créateur de l'étiquette (int)
 # Return : l'id de l'étiquette ajoutée (int) ou False si une étiquette avec le même nom existe déjà ou si erreur
 def addLabel(nom, couleur, id_enseignant):
-    if not searchLabel(nom):
+    if not searchLabelWithName(nom, id_enseignant):
         try:
             # Connection à la BDD
             conn = sqlite3.connect('database.db')
