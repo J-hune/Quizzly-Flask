@@ -303,6 +303,7 @@ def deleteQuestion(id):
 
         # Supprime la question (et tout ce qui est lié à elle avec delete on cascade)
         cursor.execute("DELETE FROM Questions WHERE id = ?;", (id,))
+        conn.commit()
 
         # Fermeture de la connection
         cursor.close()
