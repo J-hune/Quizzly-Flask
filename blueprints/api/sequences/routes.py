@@ -170,13 +170,13 @@ def getAllSequences():
         # Vérifie qu'il est un enseignant
         if session["user"]["type"] == "Enseignant":
             result = function_sequences.getAllSequences(session["user"]["id"])
-            if result:
-                return jsonify(result)
-            else:
+            if result == 0:
                 return jsonify({
                     "status": 400,
                     "reason": "Échec de la requête"
                 }), 400
+            else:
+                return jsonify(result)
         # Ce n'est pas un enseignant
         else:
             return jsonify({
