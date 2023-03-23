@@ -204,7 +204,7 @@ def getLiensEtiquettes(id_question):
         cursor.execute("PRAGMA foreign_keys = ON")
 
         # Récupère les étiquettes de la question
-        result = cursor.execute("SELECT nom, couleur FROM Etiquettes \
+        result = cursor.execute("SELECT nom, couleur, id FROM Etiquettes \
                                 JOIN liensEtiquettesQuestions ON Etiquettes.id = liensEtiquettesQuestions.etiquette \
                                 WHERE liensEtiquettesQuestions.question=?;", (id_question,))
         result = result.fetchall()
@@ -212,7 +212,9 @@ def getLiensEtiquettes(id_question):
         # Ordonne les données dans un tableau de dico
         data = []
         for i in range(len(result)):
-            dico = {"nom": result[i][0], "couleur": result[i][1]}
+            dico = {"nom": result[i][0],
+                    "couleur": result[i][1],
+                    "id":result[i][2]}
             data.append(dico)
 
         # Fermeture de la connection
