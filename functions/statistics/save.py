@@ -48,10 +48,14 @@ def saveDiffusions(sequence):
                 "id": data_question["id"],
                 "reponse": [r['id'] for r in data_question['reponses'] if r['reponseJuste']]
             })
-        else:
+        elif data_question["type"]==1:
             reponse_juste_question.append({
                 "id": data_question["id"],
                 "numerique": float(data_question["numerique"])
+            })
+        elif data_question["type"] == 2:
+            reponse_juste_question.append({
+                "id": data_question["id"]
             })
 
     # Récupère les infos et réponses des étudiants qui ont participé à la diffusion, et ajoute s'il a correcte ou pas a la question
@@ -261,12 +265,15 @@ def addEstCorrecte(tableau_reponses_etudiants, reponse_juste_question):
                         else:
                             tableau_reponses_etudiants[j]['est_correcte'] = 0
                 # Sinon, on est sur une question avec une réponse numérique
-                else:
+                elif "numerique" in reponse_juste_question[i]:
                     # Comparaison pour voir si on a la bonne réponse ( /!\ ils doivent être du même type)
                     if tableau_reponses_etudiants[j]['answer'] == reponse_juste_question[i]["numerique"]:
                         tableau_reponses_etudiants[j]['est_correcte'] = 1
                     else:
                         tableau_reponses_etudiants[j]['est_correcte'] = 0
+                # Sinon, on est sur une question ouverte
+                else:
+                    tableau_reponses_etudiants[j]['est_correcte'] = -1
     return tableau_reponses_etudiants
 
 
