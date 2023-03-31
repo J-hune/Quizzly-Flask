@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, session
 import functions.statistics.teachers.overall
 from functions.statistics.save import removeDiffusion
+from functions.statistics.teachers.exportStats import exportStatistics
 from functions.statistics.teachers.students import getStatsByStudent
 
 teachers = Blueprint('teachers', __name__, url_prefix='/teachers')
@@ -147,13 +148,13 @@ def getStatsByStudent(id, nb=120):
             "reason": "La connection a échouée"
         }), 400
 
-@teachers.route('/exportStat/<id>', methods=['POST'])
-def exportStat(id):
+@teachers.route('/exportStats/', methods=['GET'])
+def exportStats():
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
         # Vérifie qu'il est enseignant
         if session["user"]["type"] == "Enseignant":
-            dictionnaireArchiveStat = functions.statistics.teachers.overall.exportStat(session["user"]["id"])
+            dictionnaireArchiveStat = exportStatistics(session["user"]["id"])
             if dictionnaireArchiveStat:
                 return jsonify(dictionnaireArchiveStat)
             else:
