@@ -68,7 +68,7 @@ def saveDiffusions(sequence):
 
 # Insère les infos (date, mode, enseignant) concernant la diffusion en BDD
 # Param : - date : la date de la diffusion (int)
-#         - mode : le mode de diffusion sequence (0) ou question (1) (int)
+#         - mode : le mode de diffusion sequence (1) ou question (0) (int)
 #         - enseignant : l'id de l'enseignant qui a lancé la diffusion
 # Return : Si ajout de la diffusion en BDD :
 #             l'id de la diffusion qui vient d'être ajouté (int)
