@@ -213,3 +213,136 @@ def getOverallStats(enseignant, nb_jour):
         print("Une erreur est survenue lors de la sélection des statistiques :", error)
         return False
 
+# Renvoi un dictionnaire avec toutes les données de la table ArchivesDiffusions de l'enseignant
+# Param : - cursor : cursor de la BDD
+#         - enseignant : id de l'enseignant (int)
+# Return : un dictionnaire avec toutes les données
+def exportStat(idenseignant):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # récupère toutes les données de la table ArchivesDiffusions de l'enseignant
+        cursor.execute('SELECT id, date, mode, code, titre, enseignant FROM ArchivesDiffusions WHERE enseignant = ?;',
+                       (idenseignant,))
+        resultats = cursor.fetchall()
+
+        # Transforme la valeur du mode en string et la stocke dans la listeMode et stocke les autres valeurs de la table dans les listes correspondantes
+        listeId = []
+        listeMode = []
+        listeDate = []
+        listeCode = []
+        listeTitre = []
+        for resultat in range(0, len(resultats)):
+            listeId.append(resultats[resultat][0])
+            listeDate.append(resultats[resultat][1])
+            listeCode.append(resultats[resultat][3])
+            listeTitre.append(resultats[resultat][4])
+            if resultats[resultat][2] == 0:
+                mode = "question"
+                listeMode.append(mode)
+            elif resultats[resultat][2] == 1:
+                mode = "sequence"
+                listeMode.append(mode)
+            else:
+                mode = "inconnu"
+                listeMode.append(mode)
+
+        # Crée un dictionnaire qui récupère toutes les données stockées
+        dicoDiff = {"Id": listeId,
+                    "date": listeDate,
+                    "mode": listeMode,
+                    "code": listeCode,
+                    "titre": listeTitre,
+                    }
+
+        listeIdQuestions = []
+        listeEnonce = []
+        listeType = []
+        listeNumerique = []
+        listeQuestion = []
+        listediffusion = []
+
+        for id in range(0, len(listeId)):
+            # récupère toutes les données de la table ArchivesQuestions de l'enseignant
+            cursor.execute('SELECT * FROM ArchivesQuestions WHERE diffusion= ?', (listeId[id],))
+            resultats = cursor.fetchall()
+
+            # Transforme la valeur du type en string et la stocke dans la listeType et stocke les autres valeurs de la table dans les listes correspondantes
+            for resultat in range(0, len(resultats)):
+                listeIdQuestions.append(resultats[resultat][0])
+                listeEnonce.append(resultats[resultat][1])
+                listeNumerique.append(resultats[resultat][3])
+                listeQuestion.append(resultats[resultat][4])
+                listediffusion.append(resultats[resultat][5])
+                if resultats[resultat][2] == 0:
+                    Type = "normal"
+                    listeType.append(Type)
+                if resultats[resultat][2] == 1:
+                    Type = "numerique"
+                    listeType.append(Type)
+                if resultats[resultat][2] == 2:
+                    Type = "libre"
+                    listeType.append(Type)
+                else:
+                    listeType.append("Erreur")
+
+                    # Crée un dictionnaire qui récupère toutes les données stockées
+        dicoQuest = {"Id": listeIdQuestions,
+                     "enonce": listeEnonce,
+                     "type": listeType,
+                     "numerique": listeNumerique,
+                     "question": listeQuestion,
+                     "diffusion": listediffusion
+                     }
+
+        listeIdReponse = []
+        listeDate = []
+        listeEst_correcte = []
+        listeReponse = []
+        listeEtudiant = []
+        listequestion = []
+
+        for id in range(0, len(listeIdQuestions)):
+            # récupère toutes les données de la table ArchivesQuestions de l'enseignant
+            cursor.execute('SELECT * FROM ArchivesReponses WHERE question= ?', (listeIdQuestions[id],))
+            resultats = cursor.fetchall()
+
+            # Transforme la valeur du type en string et la stocke dans la listeEst_correcte et stocke les autres valeurs de la table dans les listes correspondantes
+            for resultat in range(0, len(resultats)):
+                listeIdReponse.append(resultats[resultat][0])
+                listeDate.append(resultats[resultat][1])
+                listeReponse.append(resultats[resultat][3])
+                listeEtudiant.append(resultats[resultat][4])
+                listequestion.append(resultats[resultat][5])
+                if resultats[resultat][2] == 0:
+                    Etat = "Incorrect"
+                    listeEst_correcte.append(Etat)
+                if resultats[resultat][2] == 1:
+                    Etat = "Correct"
+                    listeEst_correcte.append(Etat)
+                if resultats[resultat][2] == -1:
+                    Etat = "Réponse ouverte"
+                    listeEst_correcte.append(Etat)
+                else:
+                    listeEst_correcte.append("Erreur")
+
+        # Crée un dictionnaire qui récupère toutes les données stockées
+        dicoRep = {"Id": listeIdReponse,
+                   "date": listeDate,
+                   "est_correcte": listeEst_correcte,
+                   "reponse": listeReponse,
+                   "etudiant": listeEtudiant,
+                   "question": listequestion
+                   }
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+
+        return dicoDiff, dicoQuest, dicoRep
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la sélection des statistiques :", error)
+        return False

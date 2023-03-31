@@ -146,3 +146,29 @@ def getStatsByStudent(id, nb=120):
             "status": 400,
             "reason": "La connection a échouée"
         }), 400
+
+@teachers.route('/exportStat/<id>', methods=['POST'])
+def exportStat(id):
+    # Vérifie que l'utilisateur est en session
+    if 'user' in session:
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            dictionnaireArchiveStat = functions.statistics.teachers.overall.exportStat(session["user"]["id"])
+            if dictionnaireArchiveStat:
+                return jsonify(dictionnaireArchiveStat)
+            else:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Échec de la requête"
+                }), 400
+                # Ce n'est pas un enseignant
+        else:
+            return jsonify({
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "Permission non accordée"
+        }), 400
