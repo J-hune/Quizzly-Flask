@@ -22,11 +22,10 @@ from functions.questions import getQuestion
 #      'date':1678558957
 # }
 def saveDiffusions(sequence):
-
     # Appel a la fonction pour creer l'archive de la diffusion et récupère l'id de la diffusion
     diffusion_id = saveArchivesDiffusion(sequence["date"], sequence["mode"], sequence["id_enseignant"],
                                          sequence["titre"], sequence["name"])
-    if not diffusion_id :
+    if not diffusion_id:
         return False
 
     # Récupère les id des questions utilisées lors de la diffusion
@@ -43,12 +42,12 @@ def saveDiffusions(sequence):
         saveArchivesQuestions(data_question, diffusion_id)
 
         # Extrait juste les bonnes réponses et l'id de la question
-        if data_question["type"]==0:
+        if data_question["type"] == 0:
             reponse_juste_question.append({
                 "id": data_question["id"],
                 "reponse": [r['id'] for r in data_question['reponses'] if r['reponseJuste']]
             })
-        elif data_question["type"]==1:
+        elif data_question["type"] == 1:
             reponse_juste_question.append({
                 "id": data_question["id"],
                 "numerique": float(data_question["numerique"])
@@ -59,7 +58,7 @@ def saveDiffusions(sequence):
             })
 
     # Récupère les infos et réponses des étudiants qui ont participé à la diffusion, et ajoute s'il a correcte ou pas a la question
-    tableau_reponses_etudiants = addEstCorrecte(sequence["reponsesEtudiant"],reponse_juste_question)
+    tableau_reponses_etudiants = addEstCorrecte(sequence["reponsesEtudiant"], reponse_juste_question)
 
     # Insère les données des réponses dans la table d'archive des réponses
     for i in range(len(tableau_reponses_etudiants)):
@@ -123,8 +122,10 @@ def saveArchivesQuestions(data_question, id_diffusion):
         cursor = conn.cursor()
 
         # Insertion de l'archive de la question dans la table
-        cursor.execute("INSERT INTO ArchivesQuestions (enonce, type, numerique, question, diffusion) VALUES (?, ?, ?, ?, ?);",
-                       (data_question["enonce"], data_question["type"], data_question["numerique"], data_question["id"], id_diffusion))
+        cursor.execute(
+            "INSERT INTO ArchivesQuestions (enonce, type, numerique, question, diffusion) VALUES (?, ?, ?, ?, ?);",
+            (data_question["enonce"], data_question["type"], data_question["numerique"], data_question["id"],
+             id_diffusion))
         conn.commit()
 
         # Fermeture de la connection
@@ -159,8 +160,9 @@ def archivesReponses(reponse_etudiant, id_diffusion):
         cursor = conn.cursor()
 
         # Requêtes pour récupérer l'id de la question des archives et son type
-        id_question_archive = cursor.execute("SELECT id,type FROM ArchivesQuestions WHERE question = ? AND diffusion = ?",
-                                             (reponse_etudiant["question"], id_diffusion))
+        id_question_archive = cursor.execute(
+            "SELECT id,type FROM ArchivesQuestions WHERE question = ? AND diffusion = ?",
+            (reponse_etudiant["question"], id_diffusion))
         id_question_archive = id_question_archive.fetchone()
 
         # Insertion des données dans des variables pour une meilleure lisibilité
@@ -173,13 +175,14 @@ def archivesReponses(reponse_etudiant, id_diffusion):
 
         # Si on a une question numérique, on met la réponse de l'étudiant dans la base de données
         if type_question == 1:
-            save = saveArchivesReponse(reponse_etudiant["date"], reponse_etudiant["est_correcte"], reponse_etudiant["answer"],
-                                reponse_etudiant["id"], id_question)
+            save = saveArchivesReponse(reponse_etudiant["date"], reponse_etudiant["est_correcte"],
+                                       reponse_etudiant["answer"],
+                                       reponse_etudiant["id"], id_question)
 
         # Sinon, on a une question QCM, on met donc le nombre de réponses qu'a donné l'étudiant à cette question
         else:
             save = saveArchivesReponse(reponse_etudiant["date"], reponse_etudiant["est_correcte"],
-                                len(reponse_etudiant["answer"]), reponse_etudiant["id"], id_question)
+                                       len(reponse_etudiant["answer"]), reponse_etudiant["id"], id_question)
 
         return save
 
@@ -205,8 +208,9 @@ def saveArchivesReponse(date, est_correcte, reponse, id_etudiant, id_question):
         cursor = conn.cursor()
 
         # Insertion des données de la réponse dans la table d'archive des réponses
-        cursor.execute("INSERT INTO ArchivesReponses (date, est_correcte, reponse, etudiant, question) VALUES (?, ?, ?, ?, ?);",
-                       (date, est_correcte, reponse, id_etudiant, id_question))
+        cursor.execute(
+            "INSERT INTO ArchivesReponses (date, est_correcte, reponse, etudiant, question) VALUES (?, ?, ?, ?, ?);",
+            (date, est_correcte, reponse, id_etudiant, id_question))
         conn.commit()
 
         # Fermeture de la connection
@@ -237,7 +241,6 @@ def saveArchivesReponse(date, est_correcte, reponse, id_etudiant, id_question):
 #           {'id': 22100000, 'question': 18, 'answer': [33],'date':1678558989, 'est_correcte': 0}
 #           ]
 def addEstCorrecte(tableau_reponses_etudiants, reponse_juste_question):
-
     # Boucle qui parcourt toutes les questions
     for i in range(len(reponse_juste_question)):
 
@@ -245,7 +248,8 @@ def addEstCorrecte(tableau_reponses_etudiants, reponse_juste_question):
         for j in range(len(tableau_reponses_etudiants)):
 
             # Verifier si on n'a pas déjà ajouté "est correcte" à cette réponse et si on est sur la question que l'on vérifie
-            if not ('est_correcte' in tableau_reponses_etudiants[j]) and reponse_juste_question[i]["id"] == tableau_reponses_etudiants[j]["question"]:
+            if not ('est_correcte' in tableau_reponses_etudiants[j]) and reponse_juste_question[i]["id"] == \
+                    tableau_reponses_etudiants[j]["question"]:
                 # Si on est sur une question sous forme de QCM
                 if "reponse" in reponse_juste_question[i]:
 
@@ -255,7 +259,8 @@ def addEstCorrecte(tableau_reponses_etudiants, reponse_juste_question):
                     else:
                         k = 0
                         # Boucle pour savoir si l'étudiant a toutes les bonnes réponses au QCM
-                        while k < len(reponse_juste_question[i]["reponse"]) and reponse_juste_question[i]["reponse"][k] in \
+                        while k < len(reponse_juste_question[i]["reponse"]) and reponse_juste_question[i]["reponse"][
+                            k] in \
                                 tableau_reponses_etudiants[j]['answer']:
                             k += 1
 
@@ -300,4 +305,29 @@ def removeDiffusion(id_diffusion, id_enseignant):
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la suppression de la séquence :", error)
+        return False
+
+
+# Supprime toutes les archives de l'enseignant
+# Param : id_enseignant : id de l'enseignant qui possède l'archive (int)
+def removeAllDiffusions(id_enseignant):
+    try:
+        # Connection à la BDD
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Active les clés étrangères
+        cursor.execute("PRAGMA foreign_keys = ON")
+
+        # Suppression de la séquence (update on cascade supprime les archives des questions et réponses liées)
+        cursor.execute("DELETE FROM ArchivesDiffusions WHERE enseignant = ?;", (id_enseignant,))
+        conn.commit()
+
+        # Fermeture de la connection
+        cursor.close()
+        conn.close()
+        return True
+
+    except sqlite3.Error as error:
+        print("Une erreur est survenue lors de la suppression des archives :", error)
         return False

@@ -90,6 +90,34 @@ def removeDiffusion(id):
         }), 400
 
 
+# Supprime toutes les diffusions des archives
+@teachers.route('/removeAllDiffusions', methods=['GET'])
+def removeAllDiffusions():
+    # Vérifie que l'utilisateur est en session
+    if 'user' in session:
+        # Vérifie qu'il est enseignant
+        if session["user"]["type"] == "Enseignant":
+            if functions.statistics.save.removeAllDiffusions(session["user"]["id"]):
+                return jsonify(success=True), 200
+            else:
+                return jsonify({
+                    "status": 400,
+                    "reason": "Échec de la requête"
+                }), 400
+        # Ce n'est pas un enseignant
+        else:
+            return jsonify({
+                "status": 403,
+                "reason": "Permission non accordée"
+            }), 403
+    # Pas en session
+    else:
+        return jsonify({
+            "status": 400,
+            "reason": "La connection a échouée"
+        }), 400
+
+
 # Récupère les statistiques d'un étudiant de l'enseignant
 # Param GET : - id : id de l'étudiant (int)
 #             - nb : le nombre de jours à calculer par rapport à aujourd'hui, de base à 120 (int)
