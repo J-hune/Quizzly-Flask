@@ -1,12 +1,12 @@
 import sqlite3
 
 # Retourne un dictionnaire de dictionnaires contenant toutes les statistiques d'un enseignant
-# Param : - enseignant : id de l'enseignant (int)
+# Param : - id_enseignant : id de l'enseignant (int)
 # Return : un dictionnaire
-def exportStatistics(enseignant):
-    list_diffusions = exportDiffusions(enseignant)
-    list_questions = exportQuestions(enseignant)
-    list_reponses = exportReponses(enseignant)
+def exportStats(id_enseignant):
+    list_diffusions = exportDiffusions(id_enseignant)
+    list_questions = exportQuestions(id_enseignant)
+    list_reponses = exportReponses(id_enseignant)
 
     # S'il y eu une erreur lors d'un des appels des fonctions, on retourne False
     if not list_questions or not list_questions or not list_reponses:
@@ -20,9 +20,9 @@ def exportStatistics(enseignant):
 
 
 # Retourne un dictionnaire contenant toutes les diffusions d'un enseignant (table ArchivesDiffusions)
-# Param : - enseignant : id de l'enseignant (int)
+# Param : - id_enseignant : id de l'enseignant (int)
 # Return : un dictionnaire
-def exportDiffusions(enseignant):
+def exportDiffusions(id_enseignant):
     try:
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
@@ -30,7 +30,7 @@ def exportDiffusions(enseignant):
 
         # On récupère toutes les archives des diffusions de l'enseignant (table ArchivesDiffusions)
         cursor.execute("SELECT id, date, mode, code, titre FROM ArchivesDiffusions WHERE enseignant = ?;",
-                       (enseignant,))
+                       (id_enseignant,))
         results = cursor.fetchall()
 
         # On initialise un dictionnaire vide avec des listes vides pour chaque clé
@@ -58,9 +58,9 @@ def exportDiffusions(enseignant):
 
 
 # Retourne un dictionnaire contenant toutes les questions des diffusions d'un enseignant (table ArchivesReponses)
-# Param : - enseignant : id de l'enseignant (int)
+# Param : - id_enseignant : id de l'enseignant (int)
 # Return : un dictionnaire
-def exportQuestions(enseignant):
+def exportQuestions(id_enseignant):
     try:
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
@@ -69,7 +69,7 @@ def exportQuestions(enseignant):
         # On récupère toutes les archives des diffusions de l'enseignant (table ArchivesDiffusions)
         cursor.execute("SELECT Questions.* FROM ArchivesQuestions AS Questions \
                             INNER JOIN ArchivesDiffusions AS Diffusions on Questions.diffusion = Diffusions.id \
-                            WHERE Diffusions.enseignant = ?;", (enseignant,))
+                            WHERE Diffusions.enseignant = ?;", (id_enseignant,))
         results = cursor.fetchall()
 
         # On initialise un dictionnaire vide avec des listes vides pour chaque clé
@@ -99,9 +99,9 @@ def exportQuestions(enseignant):
 
 
 # Retourne un dictionnaire contenant toutes les réponses des diffusions d'un enseignant (table ArchivesReponses)
-# Param : - enseignant : id de l'enseignant (int)
+# Param : - id_enseignant : id de l'enseignant (int)
 # Return : un dictionnaire
-def exportReponses(enseignant):
+def exportReponses(id_enseignant):
     try:
         # Connection à la BDD
         conn = sqlite3.connect('database.db')
@@ -111,7 +111,7 @@ def exportReponses(enseignant):
         cursor.execute("SELECT Reponses.* FROM ArchivesReponses AS Reponses \
                     INNER JOIN ArchivesQuestions AS Questions on Reponses.question = Questions.id \
                     INNER JOIN ArchivesDiffusions AS Diffusions on Questions.diffusion = Diffusions.id \
-                    WHERE Diffusions.enseignant = ?;", (enseignant,))
+                    WHERE Diffusions.enseignant = ?;", (id_enseignant,))
         results = cursor.fetchall()
 
         # On initialise un dictionnaire vide avec des listes vides pour chaque clé
