@@ -275,6 +275,10 @@ def studentExists(student_id, password):
         cursor.execute("SELECT * FROM Etudiants WHERE id = ?;", (student_id,))
         result = cursor.fetchone()
 
+        # Si l'étudiant n'existe pas
+        if not result:
+            return False
+
         # Si le condensat correspond au mot de passe
         if check_password_hash(result[3], password):
             session["user"] = {
