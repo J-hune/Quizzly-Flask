@@ -173,16 +173,17 @@ def archivesReponses(reponse_etudiant, id_diffusion):
         cursor.close()
         conn.close()
 
-        # Si on a une question numérique, on met la réponse de l'étudiant dans la base de données
-        if type_question == 1:
+        # Si on a une question QCM, on met donc le nombre de réponses qu'a donné l'étudiant à cette question
+        if type_question == 0:
+            save = saveArchivesReponse(reponse_etudiant["date"], reponse_etudiant["est_correcte"],
+                                       len(reponse_etudiant["answer"]), reponse_etudiant["id"], id_question)
+
+        # Sinon, on a une question numérique ou ouverte
+        # On met donc la réponse de l'étudiant dans la base de données
+        else:
             save = saveArchivesReponse(reponse_etudiant["date"], reponse_etudiant["est_correcte"],
                                        reponse_etudiant["answer"],
                                        reponse_etudiant["id"], id_question)
-
-        # Sinon, on a une question QCM, on met donc le nombre de réponses qu'a donné l'étudiant à cette question
-        else:
-            save = saveArchivesReponse(reponse_etudiant["date"], reponse_etudiant["est_correcte"],
-                                       len(reponse_etudiant["answer"]), reponse_etudiant["id"], id_question)
 
         return save
 
