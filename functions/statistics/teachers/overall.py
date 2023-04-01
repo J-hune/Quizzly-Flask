@@ -209,8 +209,6 @@ def getArchives(cursor, enseignant):
                                         ORDER BY AD.date DESC;", (enseignant,))
         result_question = cursor.fetchall()
 
-        print(result_question)
-
         nb_quiz = len(result_quiz)  # Le nombre de diffusions total
         nb_quiz_done = 0  # Le nombre de diffusions réellement effectué (au moins une question non ouverte)
         nb_question_total = len(result_question)

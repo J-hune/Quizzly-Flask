@@ -2,6 +2,7 @@ import sqlite3
 
 
 # Renvoie les 3 dernières diffusions auxquelles un étudiant a participé
+# (sauf les diffusions avec que des questions ouvertes)
 # Param : id de l'étudiant
 # Return : les trois dernières diffusions de l'étudiant (tab de dico)
 #               [{"code":"A2dt8g6B",
@@ -27,7 +28,7 @@ def getLastSequences(id):
                                             JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
                                             JOIN ArchivesReponses AR ON AQ.id = AR.question \
                                             JOIN Enseignants E ON AD.enseignant = E.id \
-                                            WHERE AR.etudiant = ? AND AD.mode = 1 \
+                                            WHERE AR.etudiant = ? AND AD.mode = 1 AND AQ.type != 2 \
                                             GROUP BY AD.id, AR.etudiant \
                                             ORDER BY AD.date DESC LIMIT 3;", (id,))
         result = result.fetchall()
