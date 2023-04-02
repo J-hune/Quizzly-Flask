@@ -26,11 +26,9 @@ def combinaisons_tableaux(tableaux, limite = 500000):
             # et que l'on atteint la limite, on renvoie nos données (pour éviter de faire un tableau trop grand
             # si on veut que les premières valeurs
             if len(nouvelles_combinaisons[0]) == len(tableaux) and len(nouvelles_combinaisons) > limite:
-                print('complexité combinaisons_tableaux', i)
                 return nouvelles_combinaisons
 
         resultats = nouvelles_combinaisons
-    print('complexité combinaisons_tableaux', i)
     return resultats
 
 # Param : intervalle : [{"max":nombre de question de l'étiquette, "value":[2,5]L'intervalle},{...},...]
@@ -50,7 +48,6 @@ def combinaisons_tableaux(tableaux, limite = 500000):
 #                       si on demande trop de question et le chiffre correspond au nombre max de question
 #                       1 on demande trop de sujet et le chiffre correspond au nombre max de sujet
 def systemeARes(intervalle, nb_question, nb_sujet):
-    complexité = 0
     tableau_intervalle = []  # Tableau "étaler" des intervalles de [1,5] donne [1,2,3,4,5]
     result = []  # Tableau qui contient les bonnes combinaisons qui correspond au bon nb de question et nb de sujet
     result_combi = []  # Tableau qui contient le nombre de solutions de chaque sujet
@@ -59,7 +56,6 @@ def systemeARes(intervalle, nb_question, nb_sujet):
     # Boucle pour "étaler les intervalles" : de [1,5] donne [1,2,3,4,5]
     # et les insère dans tableau_intervalle
     for i in range(len(intervalle)):
-        complexité +=1
         tableau_intervalle.append([])
         intervalle_max_value.append(intervalle[i]["max"])
         for j in range(intervalle[i]["value"][0], intervalle[i]["value"][1]+1):
@@ -72,14 +68,12 @@ def systemeARes(intervalle, nb_question, nb_sujet):
     nb_combinaison_total = 0
     nb_question_combinaison = 0
     for i in range(len(tableau_combinaison)):
-        complexité += 1
         nb_question_combinaison = 0
         nb_combinaison = 1
 
 
         # Boucle qui parcourt chaque valeur d'une combinaison
         for j in range(len(tableau_combinaison[i])):
-            complexité += 1
             nb_question_combinaison += tableau_combinaison[i][j]
             nb_combinaison *= factorial(intervalle[j]["max"])/(factorial(tableau_combinaison[i][j])*factorial(intervalle[j]["max"]-tableau_combinaison[i][j]))
 
@@ -90,7 +84,6 @@ def systemeARes(intervalle, nb_question, nb_sujet):
             result.append(tableau_combinaison[i])
             result_combi.append(nb_combinaison)
             nb_combinaison_total += nb_combinaison
-    print("complexité systemeARes ",complexité)
     if nb_combinaison_total >= nb_sujet:
         return [result, result_combi, intervalle_max_value]
     else:
@@ -109,10 +102,8 @@ def systemeARes(intervalle, nb_question, nb_sujet):
 # Renvoie : un tableau contenant result_systeme réduit au nombre de sujets
 #           et les choix que l'on veut pour chaque configuration
 def choixDesSolutionsDansLeSysteme(result_systeme, nb_sujet):
-    complexité = 0
     # Si notre nombre de configurations différentes de sujet est égale au nb_sujet
     # on prend que 1 solution de chaque configuration
-    print(result_systeme)
     if len(result_systeme[0]) == nb_sujet:
         return [result_systeme, [1 for i in range(len(result_systeme[0]))]]
 
@@ -127,7 +118,6 @@ def choixDesSolutionsDansLeSysteme(result_systeme, nb_sujet):
 
         # Boucle pour étaler les choix
         while nb_sujet_choisi<nb_sujet:
-            complexité += 1
             # Si on n'a pas atteint le nombre de possibilités de cette configuration
             if tab_choix[j] != result_systeme[1][j]:
                 tab_choix[j] += 1
@@ -140,7 +130,6 @@ def choixDesSolutionsDansLeSysteme(result_systeme, nb_sujet):
         tab_choix = tab_choix[:nb_sujet]
         result_systeme[0] = result_systeme[0][:nb_sujet]
         result_systeme[1] = result_systeme[1][:nb_sujet]
-        print('complexité choixDesSolutionsDansLeSysteme', complexité)
         return [result_systeme, tab_choix]
 
 
@@ -150,7 +139,6 @@ def choixDesSolutionsDansLeSysteme(result_systeme, nb_sujet):
 #         n : un entier (le n de p parmi n)
 #         nb_sujet : le nb de sujet différent que l'on veut
 def combinaisons_v1(p, n, nb_sujet):
-    complexité = 0
     liste_combinaisons = []  # initialisation de la liste des combinaisons à générer
     indices = list(range(p))  # initialisation de la liste avec les indices de départ [0,1,...,p-1]
 
@@ -164,11 +152,9 @@ def combinaisons_v1(p, n, nb_sujet):
 
     # tant qu'il reste encore des indices à incrémenter ou que l'on n'a pas les combinaisons que l'on souhaite
     while i != -1 and nb_iteration < nb_sujet:
-        complexité+= 1
         indices[i] += 1  # on incrémente l'indice
 
         for j in range(i + 1, p):  # on recale les indices des éléments suivants par rapport à ndices[i]
-            complexité += 1
             indices[j] = indices[j - 1] + 1
         if indices[i] == (n - p + i):  # si cet indice a atteint sa valeur maxi
             i -= 1  # on repère l'indice précédent
@@ -177,8 +163,6 @@ def combinaisons_v1(p, n, nb_sujet):
 
         liste_combinaisons.append(tuple(indices))  # ajout de la combinaison à la liste
         nb_iteration += 1
-    print('complexité combinaisons_v1',complexité)
-    #print("nb_iteration", nb_iteration)
     return liste_combinaisons
 
 
@@ -197,18 +181,15 @@ def combinaisons_v1(p, n, nb_sujet):
 #            et 6 questions de l'étiquette 1 (0, 1, 2, 3, 4, 5)
 def generateEvaluationWithoutIDQuestion(intervallesMax, choixPossible):
     controles = []
-    complexité = 0
     tableau_configurations = choixPossible[0][0]  # Tableau qui contient les différentes configurations de sujet
     tableau_choix_configuration = choixPossible[1]  # Tableau qui contient le nombre de choix pour chaque configuration
 
     # On parcourt toutes les configurations de sujet
     # (qui sont limités au nombre de sujets grâce à l'algo choixDesSolutionsDansLeSysteme )
     for i in range(len(tableau_configurations)):
-        complexité += 1
         tableau_combinaison = [] # Tableau qui va prendre les combinaisons de questions différentes pour une configuration i donné
         # Boucle qui parcourt toutes les configurations
         for j in range(len(tableau_configurations[i])):
-            complexité += 1
             # appel à combinaison pour avoir toutes les combinaisons que l'on souhaite pour une étiquette "j"
             combinaison = combinaisons_v1(tableau_configurations[i][j], intervallesMax[j], tableau_choix_configuration[i])
             # Et ajout de cette combinaison dans notre tableau qui prend toutes les combinaisons de question pour chaque étiquette
@@ -219,10 +200,7 @@ def generateEvaluationWithoutIDQuestion(intervallesMax, choixPossible):
 
         # On ajoute tous ces sujets à notre tableau final
         for k in range(len(tableau_combinaison)):
-            complexité += 1
             controles.append(tableau_combinaison[k])
-    i = 0
-    print("complexité generateEvaluationWithoutIDQuestion",complexité)
     return controles
 
 # Param : controles : tableau de controles renvoyer par genererDesControles
@@ -232,16 +210,11 @@ def generateEvaluationWithoutIDQuestion(intervallesMax, choixPossible):
 #           exemple : [[12,34,53][13,52,54,33]...]
 def associeControleIdQuestion(controles, id_questions):
     sujet_final = []
-    complexité = 0
     for i in range(len(controles)):
-        complexité += 1
         sujet_final.append([])
         for j in range(len(controles[i])):
-            complexité += 1
             for k in range(len(controles[i][j])):
-                complexité+= 1
                 sujet_final[i].append(id_questions[j][controles[i][j][k]])
-    print("complexité associeControleIdQuestion",complexité)
     return sujet_final
 
 
@@ -303,7 +276,6 @@ def enleveLesDoublons(id_questions, intervalle, nb_question, nb_sujet):
     # On récupère les indices des étiquettes qui ont des doublons
     keys = list(question_doublon.keys())
     question_doublon = list(question_doublon.values())
-    print(question_doublon)
 
     # Boucle pour retirer au maximum les doublons des questions
     # si une question a atteint son minimum elle privatise les questions qui restent, même si elles sont
@@ -314,24 +286,17 @@ def enleveLesDoublons(id_questions, intervalle, nb_question, nb_sujet):
     while j < len(keys):
         i = 0
         while i < len(question_doublon[j]):
-            print(question_doublon)
             if keys and intervalle[keys[j]]["max"] - 1 < intervalle[keys[j]]["value"][1]:
 
                 if keys and intervalle[keys[j]]["value"][1] - 1 < intervalle[keys[j]]["value"][0] and \
                         question_doublon[j][i] in id_questions[keys[j]]:
-                    print("Je suis passé par la ")
-                    print(intervalle)
                     l = 0
                     v = i
-                    print(i)
                     while keys and l < intervalle[keys[j]]["value"][0]:
-                        print(question_doublon)
                         a_garder = -1
                         if len(question_doublon[j]) > v:
                             a_garder = question_doublon[j][v]
-                        print(a_garder)
                         for k in range(len(keys)):
-                            print(a_garder)
                             if a_garder in question_doublon[k]:
                                 question_doublon[k].remove(a_garder)
                                 if k != j:
@@ -349,15 +314,11 @@ def enleveLesDoublons(id_questions, intervalle, nb_question, nb_sujet):
                             v = 0
                         else:
                             v = (v + 1) % len(question_doublon[j])
-                    print(intervalle)
                 else:
 
                     if question_doublon[j][i] in id_questions[keys[j]]:
                         a_garder = question_doublon[j][i]
                         for k in range(len(keys)):
-                            print(question_doublon)
-                            print(intervalle)
-                            print(id_questions)
                             if a_garder in question_doublon[k]:
                                 question_doublon[k].remove(a_garder)
                                 if k != j:
@@ -371,8 +332,6 @@ def enleveLesDoublons(id_questions, intervalle, nb_question, nb_sujet):
 
                         i -= 1
             elif keys:
-                print("En faite non ici ")
-                print(intervalle)
                 if question_doublon[j][i] in id_questions[keys[j]]:
                     intervalle[keys[j]]["max"] -= 1
                     id_questions[keys[j]].remove(question_doublon[j][i])
