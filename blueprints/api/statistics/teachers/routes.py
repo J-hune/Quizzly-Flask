@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, session
 import functions.statistics.teachers.overall
 import functions.statistics.teachers.exportStats
+import functions.statistics.teachers.students
 
 teachers = Blueprint('teachers', __name__, url_prefix='/teachers')
 
