@@ -23,15 +23,16 @@ def getTemporalStats(cursor, etudiant, enseignant, nb_jour):
         jour = datetime.timestamp(datetime.combine(datetime.now(), time.min))  # Date du jour actuel (à minuit pile)
         jour -= (86400 * (nb_jour-1))  # Jour il y a nb_jour
 
-        # Récupère la date, le mode, le nombre de participants, le taux de réussite pour tous les quiz après le jour
-        #                                           nbParticipant              nbRéponse      nbBonneRéponse
-        cursor.execute("SELECT AD.date, AD.mode, COUNT(DISTINCT AR.etudiant), COUNT(AR.id), SUM(AR.est_correcte) \
+        # Récupère la date, le mode, le taux de réussite pour tous les quiz après le jour
+        #                                         nbRéponse      nbBonneRéponse
+        cursor.execute("SELECT AD.date, AD.mode, COUNT(AR.id), SUM(AR.est_correcte) \
                                 FROM ArchivesDiffusions AD \
                                 JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
                                 JOIN ArchivesReponses AR ON AQ.id = AR.question \
                                 WHERE AD.date >= ? \
                                 AND AD.enseignant = ? \
                                 AND AR.etudiant = ? \
+                                AND AQ.type != 2 \
                                 GROUP BY AD.id \
                                 ORDER BY AD.date;", (jour, enseignant, etudiant))
         result = cursor.fetchall()
@@ -52,11 +53,11 @@ def getTemporalStats(cursor, etudiant, enseignant, nb_jour):
             while k < nb_quiz and result[k][0] < jour + 86400:
                 # Si c'est une question
                 if result[k][1] == 0:
-                    success_rate_question += result[k][4] / result[k][3]
+                    success_rate_question += result[k][3] / result[k][2]
                     nb_question += 1
                 # Sinon c'est une séquence
                 else:
-                    success_rate_sequence += result[k][4] / result[k][3]
+                    success_rate_sequence += result[k][3] / result[k][2]
                     nb_sequence += 1
                 k += 1
 
@@ -98,53 +99,94 @@ def getTemporalStats(cursor, etudiant, enseignant, nb_jour):
 #                { "archiveId": 2, "title": "Les questions de sciences", "id": "Gxa4t3xr", "date": 1678667402, "participantCount": 15, "percentCorrect": 32},
 #                {...}, ...
 #               ]
+#
+#           /!\ Spécifications stats :
+#                   - si une séquence est diffusée avec que des questions ouvertes, on envoie -1 (le front s'en charge)
+#                   - si une séquence est diffusée avec une question ouverte, on ne la compte pas
+#                   - si une question est diffusée avec une question ouverte, on envoie le nb de participant et
+#                     la réponse de l'élève
 def getArchives(cursor, etudiant, enseignant):
     try:
-        # L'id, le titre, le code, la date, le mode, le nombre de participants, le taux de réussite de chaque quiz
-        #                                                                       nbParticipant             nbRéponse     #nbBonneRéponse       nbQuestion
-        cursor.execute("SELECT AD.id, AD.titre, AD.code, AD.date, AD.mode, COUNT(DISTINCT AR.etudiant), COUNT(AR.id), SUM(AR.est_correcte), COUNT(DISTINCT AQ.id) \
+        # L'id, le titre, le code, la date, le mode, le nombre de participants de chaque quiz
+        #                                                                      nbParticipant
+        cursor.execute("SELECT AD.id, AD.titre, AD.code, AD.date, AD.mode, COUNT(DISTINCT AR.etudiant) \
+                                FROM ArchivesDiffusions AD \
+                                JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
+                                JOIN ArchivesReponses AR ON AQ.id = AR.question \
+                                WHERE AD.id IN (SELECT DISTINCT AD2.id \
+                                                FROM ArchivesDiffusions AD2 \
+                                                JOIN ArchivesQuestions AQ2 ON AD2.id = AQ2.diffusion \
+                                                JOIN ArchivesReponses AR2 ON AQ2.id = AR2.question \
+                                                WHERE AD.enseignant = ? \
+                                                AND AR2.etudiant = ?) \
+								GROUP BY AD.id \
+                                ORDER BY AD.date DESC;", (enseignant, etudiant))
+        result_quiz = cursor.fetchall()
+
+        # L'id, l'id de diffusion, le type, la réussite et la réponse de chaque question
+        cursor.execute("SELECT AQ.id, AQ.diffusion, AQ.type, AR.est_correcte, AR.reponse \
                                 FROM ArchivesDiffusions AD \
                                 JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
                                 JOIN ArchivesReponses AR ON AQ.id = AR.question \
                                 WHERE AD.enseignant = ? \
-                                AND AR.etudiant = ? \
-                                GROUP BY AD.id \
+								AND AR.etudiant = ? \
+								GROUP BY AQ.id, AD.id \
                                 ORDER BY AD.date DESC;", (enseignant, etudiant))
-        result = cursor.fetchall()
+        result_question = cursor.fetchall()
 
-        nb_quiz = len(result)  # Le nombre de diffusions total
-        nb_question_total = 0  # Le nombre de questions posées
+        nb_quiz = len(result_quiz)  # Le nombre total de diffusions
+        nb_quiz_done = 0  # Le nombre de diffusions réellement effectué (au moins une question non ouverte)
+        nb_question = len(result_question)  # Le nombre total de questions posées
         taux_reussite_total = 0  # Le pourcentage de réussite total
         archives = []  # Les archives des diffusions
 
-        # S'il a déjà participé à au moins un quiz (pour éviter la division par 0)
-        if nb_quiz > 0:
-            # Ordonne les données dans un tableau de dico pour chaque quiz
-            for i in range(nb_quiz):
-                data = {"archiveId": result[i][0],
-                        "title": result[i][1],
-                        "id": result[i][2],
-                        "date": result[i][3],
-                        "mode": result[i][4],
-                        "participantCount": result[i][5]
-                        }
+        k = 0
+        # Ordonne les données dans un tableau de dico pour chaque quiz
+        for i in range(nb_quiz):
 
-                nb_question_total += result[i][8]  # Additionne les questions posées
+            taux_reussite_quiz = 0  # Taux de succès du quiz
+            nb_question_quiz = 0  # Nombre de questions dans le quiz
+            nb_question_ouverte = 0  # Nombre de questions ouvertes dans le quiz
 
-                # Si le quiz a réellement été effectué (ce n'est pas une diffusion vide)
-                if result[i][7] is not None:
-                    pourcentage = (result[i][7] / result[i][6]) * 100  # Calcule le pourcentage du quiz
-                    data["percentCorrect"] = pourcentage
-                    taux_reussite_total += pourcentage
-                # Sinon, on met le pourcentage à 0, et on ne le compte pas dans le pourcentage total
+            data = {"id": result_quiz[i][0],
+                    "title": result_quiz[i][1],
+                    "code": result_quiz[i][2],
+                    "date": result_quiz[i][3],
+                    "mode": result_quiz[i][4],
+                    "participantCount": result_quiz[i][5]
+                    }
+
+            # Pour toutes les questions du quiz
+            while k < nb_question and result_quiz[i][0] == result_question[k][1]:
+                # Si c'est une question ouverte
+                if result_question[k][2] == 2:
+                    nb_question_ouverte += 1
+                # Sinon c'est une question multiple ou numérique, on calcule alors le taux de réussite
                 else:
-                    data["percentCorrect"] = 0
+                    taux_reussite_quiz += result_question[k][3]
+                nb_question_quiz += 1
+                k += 1
 
-                archives.append(data)
+            # C'est une diffusion normale (au moins une question non ouverte répondue)
+            if nb_question_quiz - nb_question_ouverte > 0:
+                pourcentage = (taux_reussite_quiz / (nb_question_quiz - nb_question_ouverte)) * 100  # Moyenne du quiz
+                data["percentCorrect"] = pourcentage
+                taux_reussite_total += pourcentage
+                nb_quiz_done += 1
+            # C'est une question diffusée avec une question ouverte
+            elif result_quiz[i][4] == 0 and nb_question_ouverte == 1:
+                data["reponsesOuvertes"] = result_question[k-1][4]
+            # C'est une séquence diffusée avec que des questions ouvertes
+            elif result_quiz[i][4] == 1 and 0 < nb_question_quiz == nb_question_ouverte:
+                data["reponsesOuvertes"] = -1
 
-            taux_reussite_total = taux_reussite_total / nb_quiz
+            archives.append(data)
 
-        return nb_quiz, nb_question_total, taux_reussite_total, archives
+        # S'il a déjà participé à un quiz normal (au moins une question non ouverte répondue)
+        if nb_quiz_done > 0:
+            taux_reussite_total = taux_reussite_total / nb_quiz_done
+
+        return nb_quiz, nb_question, taux_reussite_total, archives
 
     except sqlite3.Error as error:
         print("Une erreur est survenue lors de la sélection des archives des quiz de l'étudiant:", error)
