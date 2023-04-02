@@ -1,5 +1,6 @@
 from flask import Blueprint, session
 
+from blueprints.api.evaluations.routes import evaluations
 from blueprints.api.students.routes import students
 from blueprints.api.labels.routes import label
 from blueprints.api.login.routes import login
@@ -14,6 +15,7 @@ api.register_blueprint(questions)
 api.register_blueprint(students)
 api.register_blueprint(sequences)
 api.register_blueprint(statistics)
+api.register_blueprint(evaluations)
 
 @api.route('/')
 def index():
