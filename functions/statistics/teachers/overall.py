@@ -189,12 +189,16 @@ def getArchives(cursor, enseignant):
         # Récupère l'id du quiz, la date du quiz, le mode du quiz et le nombre de participants total du quiz
         #                                                                       nbParticipant
         cursor.execute("SELECT AD.id, AD.date, AD.mode, AD.titre, AD.code, COUNT(DISTINCT AR.etudiant) \
-                                                        FROM ArchivesDiffusions AD \
-                                                        LEFT JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
-                                                        LEFT JOIN ArchivesReponses AR ON AQ.id = AR.question \
-                                                        AND AD.enseignant = ? \
-                                                        GROUP BY AD.id \
-                                                        ORDER BY AD.date DESC;", (enseignant,))
+                        FROM ArchivesDiffusions AD \
+                        LEFT JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
+                        LEFT JOIN ArchivesReponses AR ON AQ.id = AR.question \
+                        WHERE AD.id IN (SELECT AD2.id \
+                                        FROM ArchivesDiffusions AD2 \
+                                        LEFT JOIN ArchivesQuestions AQ2 ON AD2.id = AQ2.diffusion \
+                                        LEFT JOIN ArchivesReponses AR2 ON AQ2.id = AR2.question \
+                                        WHERE AD2.enseignant = ?) \
+                        GROUP BY AD.id \
+                        ORDER BY AD.date DESC;", (enseignant,))
         result_quiz = cursor.fetchall()
 
         # Récupère les données du taux de succès de chaque question pour les derniers nb_jour jours
@@ -204,7 +208,7 @@ def getArchives(cursor, enseignant):
                                         FROM ArchivesDiffusions AD \
                                         LEFT JOIN ArchivesQuestions AQ ON AD.id = AQ.diffusion \
                                         LEFT JOIN ArchivesReponses AR ON AQ.id = AR.question \
-                                        AND AD.enseignant = ? \
+                                        WHERE AD.enseignant = ? \
                                         GROUP BY AQ.id, AD.id \
                                         ORDER BY AD.date DESC;", (enseignant,))
         result_question = cursor.fetchall()
