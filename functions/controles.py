@@ -427,6 +427,7 @@ def generateEvaluation(enseignant, evaluation):
         if not evaluation["keepLabelsOrder"]:
             # On mélange l'ordre des étiquettes
             sujet_tempo = sujet_final[:]
+            sujet_final = []
             for i in range(len(sujet_tempo)):
                 shuffle(sujet_tempo[i])
 
