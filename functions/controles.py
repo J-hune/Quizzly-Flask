@@ -408,20 +408,20 @@ def generateEvaluation(enseignant, evaluation):
     # si les questions sont regroupées par étiquettes
     if evaluation["groupQuestions"]:
 
-        # Si on ne conserve pas l'ordre des étiquettes
-        if not evaluation["keepLabelsOrder"]:
-            # On mélange l'ordre des étiquettes
-            for i in range(len(controles)):
-                shuffle(controles[i])
+
 
         # Dans les 2 cas, on mélange les questions entre elles
         for i in range(len(controles)):
             for j in range(len(controles[i])):
                 controles[i][j] = list(controles[i][j])
                 shuffle(controles[i][j])
-
         sujet_final = associeControleIdQuestion(controles, id_questions)  # On associe les index du tableau aux id des questions
 
+        # Si on ne conserve pas l'ordre des étiquettes
+        if not evaluation["keepLabelsOrder"]:
+            # On mélange l'ordre des étiquettes
+            for i in range(len(sujet_final)):
+                shuffle(sujet_final[i])
     # les questions ne sont pas regroupées par étiquettes
     else:
         sujet_final = associeControleIdQuestion(controles, id_questions)  # On associe les index du tableau aux id des questions
