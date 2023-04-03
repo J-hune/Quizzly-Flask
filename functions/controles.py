@@ -208,13 +208,21 @@ def generateEvaluationWithoutIDQuestion(intervallesMax, choixPossible):
 #         Attention les questions doivent être associé par étiquette
 #         et les étiquettes dans le même ordre que dans le reste des tableaux
 #           exemple : [[12,34,53][13,52,54,33]...]
-def associeControleIdQuestion(controles, id_questions):
+def associeControleIdQuestion(controles, id_questions, keepLabelsOrder):
     sujet_final = []
-    for i in range(len(controles)):
-        sujet_final.append([])
-        for j in range(len(controles[i])):
-            for k in range(len(controles[i][j])):
-                sujet_final[i].append(id_questions[j][controles[i][j][k]])
+    if not keepLabelsOrder:
+        for i in range(len(controles)):
+            sujet_final.append([])
+            for j in range(len(controles[i])):
+                sujet_final[i].append([])
+                for k in range(len(controles[i][j])):
+                    sujet_final[i][j].append(id_questions[j][controles[i][j][k]])
+    else:
+        for i in range(len(controles)):
+            sujet_final.append([])
+            for j in range(len(controles[i])):
+                for k in range(len(controles[i][j])):
+                    sujet_final[i].append(id_questions[j][controles[i][j][k]])
     return sujet_final
 
 
@@ -413,16 +421,23 @@ def generateEvaluation(enseignant, evaluation):
             for j in range(len(controles[i])):
                 controles[i][j] = list(controles[i][j])
                 shuffle(controles[i][j])
-        sujet_final = associeControleIdQuestion(controles, id_questions)  # On associe les index du tableau aux id des questions
+        sujet_final = associeControleIdQuestion(controles, id_questions, evaluation["keepLabelsOrder"])  # On associe les index du tableau aux id des questions
 
         # Si on ne conserve pas l'ordre des étiquettes
         if not evaluation["keepLabelsOrder"]:
             # On mélange l'ordre des étiquettes
-            for i in range(len(sujet_final)):
-                shuffle(sujet_final[i])
+            sujet_tempo = sujet_final[:]
+            for i in range(len(sujet_tempo)):
+                shuffle(sujet_tempo[i])
+
+            for ligne in sujet_tempo:
+                nouvelle_ligne = []
+                for element in ligne:
+                    nouvelle_ligne.extend(element)
+                sujet_final.append(nouvelle_ligne)
     # les questions ne sont pas regroupées par étiquettes
     else:
-        sujet_final = associeControleIdQuestion(controles, id_questions)  # On associe les index du tableau aux id des questions
+        sujet_final = associeControleIdQuestion(controles, id_questions, True)  # On associe les index du tableau aux id des questions
         # On mélange les questions entre elles
         for i in range(len(sujet_final)):
             shuffle(sujet_final[i])
