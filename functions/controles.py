@@ -278,8 +278,8 @@ def enleveLesDoublons(id_questions, intervalle, nb_question, nb_sujet):
     question_doublon = list(question_doublon.values())
 
     # Boucle pour retirer au maximum les doublons des questions
-    # si une question a atteint son minimum elle privatise les questions qui restent, même si elles sont
-    # prises par d'autre étiquette
+    # si une étiquette a atteint son minimum elle privatise les questions qui restent, même si elles sont
+    # prises par d'autres étiquettes
     # et si une question peut être associé a plusieurs étiquettes sans pour autant changer les intervalles alors on
     # la garde pour plus tard. Pour pouvoir l'ajouter a l'étiquette qui correspond au mieux a la solution
     j = 0
@@ -407,8 +407,6 @@ def generateEvaluation(enseignant, evaluation):
 
     # si les questions sont regroupées par étiquettes
     if evaluation["groupQuestions"]:
-
-
 
         # Dans les 2 cas, on mélange les questions entre elles
         for i in range(len(controles)):
