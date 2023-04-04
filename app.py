@@ -2,12 +2,16 @@ from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from blueprints.api.routes import api
+import os
+from dotenv import load_dotenv
 from events import connect, disconnect, createRoomSequence, askCorrection, nextQuestion, askStopResponses, joinRoom, \
     submitAnswer, createRoomQuestion
 
+load_dotenv()
+
 app = Flask(__name__)
 app.register_blueprint(api)
-app.secret_key = "4f75177439a4bb0b5494d3ce5fd4727fe7b0d61d17ffd81d6420e40c9dc7d9da"
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
 cors = CORS(
     app, resources={r"/*": {"origins": "http://localhost:8080"}},
