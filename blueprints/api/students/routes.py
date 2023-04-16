@@ -1,3 +1,5 @@
+import os
+
 from flask import Blueprint, jsonify, request, session
 
 import functions.students
@@ -14,6 +16,14 @@ students = Blueprint('student', __name__, url_prefix='/students')
 # Return : le nombre d'étudiants inséré (int)
 @students.route('/insertStudents', methods=['POST'])
 def insertStudents():
+    # On vérifie que l'app n'est pas en mode restreint
+    restricted_mode = os.getenv("RESTRICTED_MODE")
+    if restricted_mode == "true":
+        return jsonify({
+            "status": 501,
+            "reason": "La fonctionnalité est temporairement désactivée"
+        }), 501
+
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
         # Vérifie qu'il est enseignant
@@ -46,6 +56,14 @@ def insertStudents():
 # Param GET : id de l'étudiant (int)
 @students.route('/removeStudent/<id>', methods=['GET'])
 def removeStudent(id):
+    # On vérifie que l'app n'est pas en mode restreint
+    restricted_mode = os.getenv("RESTRICTED_MODE")
+    if restricted_mode == "true":
+        return jsonify({
+            "status": 501,
+            "reason": "La fonctionnalité est temporairement désactivée"
+        }), 501
+
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
         # Vérifie qu'il est enseignant
@@ -82,6 +100,14 @@ def removeStudent(id):
 # Supprime tous les étudiants
 @students.route('/removeAllStudent/', methods=['GET'])
 def removeAllStudent():
+    # On vérifie que l'app n'est pas en mode restreint
+    restricted_mode = os.getenv("RESTRICTED_MODE")
+    if restricted_mode == "true":
+        return jsonify({
+            "status": 501,
+            "reason": "La fonctionnalité est temporairement désactivée"
+        }), 501
+
     # Vérifie que l'utilisateur est en session
     if 'user' in session:
         # Vérifie qu'il est enseignant
@@ -196,9 +222,9 @@ def getLastSequences():
             # Si l'étudiant n'a participé à aucune séquence
             else:
                 return jsonify({
-            "status": 400,
-            "reason": "Échec de la requête"
-        }), 400
+                    "status": 400,
+                    "reason": "Échec de la requête"
+                }), 400
         # Ce n'est pas un étudiant
         else:
             return jsonify({
